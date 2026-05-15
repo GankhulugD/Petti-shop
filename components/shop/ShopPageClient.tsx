@@ -99,7 +99,14 @@ function brandsToRecord(brands: string[]): Record<string, boolean> {
   return Object.fromEntries(BRANDS.map((b) => [b, brands.includes(b)]));
 }
 
-export function ShopPageClient() {
+type ShopPageClientProps = {
+  /** SSR + client must share the same strings to avoid `next/image` hydration mismatches. */
+  listingImageSrcByProductId: Record<string, string>;
+};
+
+export function ShopPageClient({
+  listingImageSrcByProductId,
+}: ShopPageClientProps) {
   const router = useRouter();
   const sp = useSearchParams();
   const spString = sp.toString();
@@ -291,7 +298,9 @@ export function ShopPageClient() {
                   name={p.name}
                   price={p.priceLabel}
                   rating={p.rating}
-                  imageSrc={p.imageSrc}
+                  imageSrc={
+                    listingImageSrcByProductId[p.id] ?? p.imageSrc
+                  }
                   imageAlt={p.imageAlt}
                   href={`/product/${p.id}`}
                 />

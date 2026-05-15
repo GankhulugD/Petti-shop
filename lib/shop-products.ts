@@ -1,3 +1,5 @@
+import { productPetGallery } from "@/lib/unsplash-pet-urls";
+
 export type AnimalKind = "dog" | "cat" | "fish" | "bird" | "small";
 
 export const SHOP_CATEGORIES = ["food", "litter", "toys", "supplies"] as const;
@@ -29,14 +31,8 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     priceMnt: 485_000,
     priceLabel: "₮ 485.000",
     rating: 4.5,
-    imageSrc:
-      "https://images.unsplash.com/photo-1589924931147-7aef6d01e836?auto=format&fit=crop&w=800&q=80",
+    ...productPetGallery("orijen-adult-dog-11kg"),
     imageAlt: "Нохойн чийглэг хоолны уут",
-    images: [
-      "https://images.unsplash.com/photo-1589924931147-7aef6d01e836?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1568572933382-39d8d3ced34b?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=800&q=80",
-    ],
     brand: "Orijen",
     animals: ["dog"],
     shopCategory: "food",
@@ -59,14 +55,8 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     priceMnt: 62_000,
     priceLabel: "₮ 62.000",
     rating: 4.5,
-    imageSrc:
-      "https://images.unsplash.com/photo-1593495937347-8c887e3eae26?auto=format&fit=crop&w=800&q=80",
+    ...productPetGallery("ever-clean-litter-10l"),
     imageAlt: "Муурны чийггүй элсний сав",
-    images: [
-      "https://images.unsplash.com/photo-1593495937347-8c887e3eae26?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=800&q=80",
-    ],
     brand: "Ever Clean",
     animals: ["cat"],
     shopCategory: "litter",
@@ -89,14 +79,8 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     priceMnt: 28_500,
     priceLabel: "₮ 28.500",
     rating: 4.5,
-    imageSrc:
-      "https://images.unsplash.com/photo-1522068559765-35c9f5d7-877?auto=format&fit=crop&w=800&q=80",
+    ...productPetGallery("tetramin-fish-food-1l"),
     imageAlt: "Аквариумын загасны хоол",
-    images: [
-      "https://images.unsplash.com/photo-1522068559765-35c9f5d7-877?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1524704654690-b56c05c78a00?auto=format&fit=crop&w=800&q=80",
-    ],
     brand: "Tetra",
     animals: ["fish"],
     shopCategory: "food",
@@ -119,14 +103,8 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     priceMnt: 34_000,
     priceLabel: "₮ 34.000",
     rating: 4.5,
-    imageSrc:
-      "https://images.unsplash.com/photo-1452570053594-1cc985ce7734?auto=format&fit=crop&w=800&q=80",
+    ...productPetGallery("vitakraft-bird-treat-800g"),
     imageAlt: "Шувуунд зориулсан амттан",
-    images: [
-      "https://images.unsplash.com/photo-1452570053594-1cc985ce7734?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1444464666168-49d7b81f33e4?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1552728082-8c8e7db422c4?auto=format&fit=crop&w=800&q=80",
-    ],
     brand: "Vitakraft",
     animals: ["bird"],
     shopCategory: "food",
@@ -148,14 +126,8 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     priceMnt: 89_000,
     priceLabel: "₮ 89.000",
     rating: 4.5,
-    imageSrc:
-      "https://images.unsplash.com/photo-1545249390-6bdfa286032f?auto=format&fit=crop&w=800&q=80",
+    ...productPetGallery("auto-water-bowl-2-5l"),
     imageAlt: "Тэжээвэр амьтны усны сав",
-    images: [
-      "https://images.unsplash.com/photo-1545249390-6bdfa286032f?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1587300004688-8b8a2a0d2773?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=800&q=80",
-    ],
     brand: "Petkit",
     animals: ["dog", "cat"],
     shopCategory: "supplies",
@@ -178,14 +150,8 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     priceMnt: 24_900,
     priceLabel: "₮ 24.900",
     rating: 4.5,
-    imageSrc:
-      "https://images.unsplash.com/photo-1535295975-38c1c0689b62?auto=format&fit=crop&w=800&q=80",
+    ...productPetGallery("plush-bottle-toy"),
     imageAlt: "Нохойн зөөлөн тоглоом",
-    images: [
-      "https://images.unsplash.com/photo-1535295975-38c1c0689b62?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1534361960057-19889db9621e?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1587300004688-8b8a2a0d2773?auto=format&fit=crop&w=800&q=80",
-    ],
     brand: "KONG",
     animals: ["dog"],
     shopCategory: "toys",
@@ -207,14 +173,8 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     priceMnt: 179_000,
     priceLabel: "₮ 179.000",
     rating: 4.5,
-    imageSrc:
-      "https://images.unsplash.com/photo-1513364776144-60967b0f8003?auto=format&fit=crop&w=800&q=80",
+    ...productPetGallery("cat-scratching-post-72"),
     imageAlt: "Муурны самар цавчих мод",
-    images: [
-      "https://images.unsplash.com/photo-1513364776144-60967b0f8003?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=800&q=80",
-    ],
     brand: "Petfun",
     animals: ["cat"],
     shopCategory: "toys",
@@ -237,14 +197,8 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     priceMnt: 42_000,
     priceLabel: "₮ 42.000",
     rating: 4.5,
-    imageSrc:
-      "https://images.unsplash.com/photo-1425082661705-1834bfd09dca?auto=format&fit=crop&w=800&q=80",
+    ...productPetGallery("kaytee-small-animal-bedding"),
     imageAlt: "Дэгдээхэй, хомякны элс",
-    images: [
-      "https://images.unsplash.com/photo-1425082661705-1834bfd09dca?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1548767758-f74f1447bcb2?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1548767758-f74f1447bcb2?auto=format&fit=crop&w=800&q=80",
-    ],
     brand: "Kaytee",
     animals: ["small"],
     shopCategory: "litter",

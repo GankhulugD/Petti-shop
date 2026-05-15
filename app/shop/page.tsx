@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 
 import { ShopPageClient } from "@/components/shop/ShopPageClient";
+import { SHOP_PRODUCTS } from "@/lib/shop-products";
+import { shopListingImageSrcMapForProductIds } from "@/lib/unsplash-pet-urls";
 
 function ShopFallback() {
   return (
@@ -10,10 +12,14 @@ function ShopFallback() {
   );
 }
 
+const listingImageSrcByProductId = shopListingImageSrcMapForProductIds(
+  SHOP_PRODUCTS.map((p) => p.id),
+);
+
 export default function ShopPage() {
   return (
     <Suspense fallback={<ShopFallback />}>
-      <ShopPageClient />
+      <ShopPageClient listingImageSrcByProductId={listingImageSrcByProductId} />
     </Suspense>
   );
 }
