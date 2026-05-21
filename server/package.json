@@ -1,0 +1,25 @@
+{
+  "name": "@petti/server",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev -c wrangler.toml",
+    "deploy": "wrangler deploy -c wrangler.toml",
+    "db:reset:local": "wrangler d1 execute petti-shop-db --local --file=./drizzle/0000_schema.sql -c wrangler.toml && npm run db:seed:local",
+    "db:reset:remote": "wrangler d1 execute petti-shop-db --remote --file=./drizzle/0000_schema.sql -c wrangler.toml && npm run db:seed:remote",
+    "db:seed:local": "wrangler d1 execute petti-shop-db --local --file=./scripts/seed.sql -c wrangler.toml",
+    "db:seed:remote": "wrangler d1 execute petti-shop-db --remote --file=./scripts/seed.sql -c wrangler.toml",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.44.2",
+    "hono": "^4.7.10"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250525.0",
+    "drizzle-kit": "^0.31.1",
+    "typescript": "^5.8.3",
+    "wrangler": "^4.14.4"
+  }
+}
