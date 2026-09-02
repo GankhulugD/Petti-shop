@@ -29,6 +29,10 @@ export function serializeStoreConfig() {
     currency: STORE.currency,
     freeShippingFromMnt: STORE.freeShippingFromMnt,
     flatShippingMnt: STORE.flatShippingMnt,
+    phone: STORE.phone,
+    email: STORE.email,
+    hours: STORE.hours,
+    bank: STORE.bank,
   };
 }
 

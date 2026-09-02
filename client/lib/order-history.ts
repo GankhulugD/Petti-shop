@@ -9,6 +9,7 @@ export function createOrderHistoryId(): string {
 
 export type OrderHistoryEntry = {
   id: string;
+  orderNumber?: string;
   at: string;
   total: number;
   subtotal: number;

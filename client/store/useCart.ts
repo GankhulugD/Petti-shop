@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 export type CartLine = {
   id: string;
   productId: string;
+  variantId?: string;
   name: string;
   priceMnt: number;
   priceLabel: string;
@@ -28,8 +29,8 @@ type CartState = {
   subtotalMnt: () => number;
 };
 
-function lineKey(productId: string, size: string) {
-  return `${productId}::${size}`;
+function lineKey(productId: string, size: string, variantId?: string) {
+  return variantId ? `${productId}::${variantId}` : `${productId}::${size}`;
 }
 
 export const useCart = create<CartState>()(
@@ -43,7 +44,7 @@ export const useCart = create<CartState>()(
       closeSheet: () => set({ isSheetOpen: false }),
 
       addItem: (item) => {
-        const id = lineKey(item.productId, item.size);
+        const id = lineKey(item.productId, item.size, item.variantId);
         set((state) => {
           const idx = state.lines.findIndex((l) => l.id === id);
           if (idx >= 0) {
@@ -94,6 +95,7 @@ export const useCart = create<CartState>()(
   ),
 );
 
+/** @deprecated use shippingForSubtotal from @/lib/api with store config */
 export const SHIPPING_FLAT_MNT = 15_000;
 export const FREE_SHIPPING_FROM_MNT = 150_000;
 

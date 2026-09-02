@@ -13,8 +13,16 @@ function ShopFallback() {
   );
 }
 
-export default async function ShopPage() {
-  const products = await fetchCatalogProducts();
+export default async function ShopPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; cat?: string }>;
+}) {
+  const sp = await searchParams;
+  const products = await fetchCatalogProducts({
+    q: sp.q,
+    cat: sp.cat,
+  });
 
   return (
     <Suspense fallback={<ShopFallback />}>

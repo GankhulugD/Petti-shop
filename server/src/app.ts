@@ -10,11 +10,12 @@ import {
   loadProductBySlug,
   loadProductGraph,
 } from "@/db/queries";
-import { categories, orderItems, orders, products } from "@/db/schema";
+import { categories, orderItems, orders, products, productVariants } from "@/db/schema";
 import type { WorkerEnv } from "@/env";
 import { requireAdmin } from "@/lib/admin";
-import { apiCors } from "@/lib/cors";
+import { apiCorsMiddleware } from "@/lib/cors";
 import { jsonError } from "@/lib/errors";
+import { registerAdminProductRoutes } from "@/routes/admin-products";
 import {
   serializeCategory,
   serializeOrder,
@@ -26,7 +27,7 @@ type AppEnv = { Bindings: WorkerEnv };
 
 const app = new Hono<AppEnv>();
 
-app.use("*", apiCors);
+app.use("*", async (c, next) => apiCorsMiddleware(c.env)(c, next));
 
 app.get("/", (c) => c.json({ service: "petti-api", version: "3" }));
 
@@ -44,7 +45,9 @@ app.get("/api/categories", async (c) => {
 
 app.get("/api/products", async (c) => {
   const db = createDb(c.env.DB);
-  return c.json({ items: await listActiveProducts(db) });
+  const q = c.req.query("q") ?? undefined;
+  const categorySlug = c.req.query("cat") ?? c.req.query("category") ?? undefined;
+  return c.json({ items: await listActiveProducts(db, { q, categorySlug }) });
 });
 
 app.get("/api/products/:slug", async (c) => {
@@ -98,12 +101,18 @@ app.post("/api/orders", async (c) => {
     if (line.variantId) {
       const variant = graph.variants.find((v) => v.id === line.variantId);
       if (!variant) return jsonError(c, "variant not found", 400);
+      if (variant.stockQty < qty) {
+        return jsonError(c, `${graph.product.name} (${variant.label}) нөөц хүрэлцэхгүй`, 400);
+      }
       unitPrice = variant.priceMnt;
       variantLabel = variant.label;
       variantId = variant.id;
     } else {
       const def = graph.variants.find((v) => v.isDefault) ?? graph.variants[0];
       if (def) {
+        if (def.stockQty < qty) {
+          return jsonError(c, `${graph.product.name} нөөц хүрэлцэхгүй`, 400);
+        }
         unitPrice = def.priceMnt;
         variantLabel = def.label;
         variantId = def.id;
@@ -152,6 +161,20 @@ app.post("/api/orders", async (c) => {
 
   if (lineRows.length) await db.insert(orderItems).values(lineRows);
 
+  for (const line of lineRows) {
+    if (!line.variantId) continue;
+    const variant = await db
+      .select()
+      .from(productVariants)
+      .where(eq(productVariants.id, line.variantId))
+      .get();
+    if (!variant) continue;
+    await db
+      .update(productVariants)
+      .set({ stockQty: Math.max(0, variant.stockQty - line.quantity) })
+      .where(eq(productVariants.id, variant.id));
+  }
+
   const created = await db.select().from(orders).where(eq(orders.id, orderId)).get();
   return c.json(
     {
@@ -162,6 +185,29 @@ app.post("/api/orders", async (c) => {
     },
     201,
   );
+});
+
+app.get("/api/orders/lookup", async (c) => {
+  const orderNumber = c.req.query("orderNumber")?.trim();
+  const email = c.req.query("email")?.trim().toLowerCase();
+  if (!orderNumber || !email) {
+    return jsonError(c, "orderNumber and email are required", 400);
+  }
+
+  const db = createDb(c.env.DB);
+  const row = await db
+    .select()
+    .from(orders)
+    .where(eq(orders.orderNumber, orderNumber))
+    .get();
+  if (!row || row.customerEmail.toLowerCase() !== email) {
+    return jsonError(c, "order not found", 404);
+  }
+  const items = await db
+    .select()
+    .from(orderItems)
+    .where(eq(orderItems.orderId, row.id));
+  return c.json(serializeOrder(row, items));
 });
 
 app.get("/api/admin/dashboard", async (c) => {
@@ -252,6 +298,8 @@ app.patch("/api/admin/orders/:id", async (c) => {
     .where(eq(orderItems.orderId, existing.id));
   return c.json(serializeOrder(updated!, items));
 });
+
+registerAdminProductRoutes(app);
 
 /** Admin panel backward compat */
 app.get("/admin/stats", async (c) => {

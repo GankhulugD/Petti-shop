@@ -1,0 +1,38 @@
+---
+description: Senior engineer operating principles — architecture, type safety, stack, and delivery
+alwaysApply: true
+---
+
+# Operating principles
+
+Act as a senior full-stack architect. Ship production code: typed, modular, minimal surface area. Read the codebase first. Plan structure, data, and state before writing. Fix build/runtime failures from logs — do not ask for trivial choices.
+
+## Stack
+
+| Layer | Canonical |
+|---|---|
+| Storefront / admin | Next.js App Router, React, TypeScript, Tailwind, Lucide, shadcn |
+| API | Cloudflare Workers + Hono |
+| Data | Drizzle + D1 (SQLite) |
+| State | Server Components + `fetch`; Zustand / TanStack Query only when client state is required |
+
+Never introduce a competing framework, ORM, or runtime without an explicit request.
+
+**Frontend:** `client/`, `admin/`. Fetch via `NEXT_PUBLIC_API_URL`. Prefer RSC; keep client components thin.
+
+**Backend:** `server/`. Schema `src/db/schema.ts`, queries `src/db/queries.ts`, serialize in `src/lib/serialize.ts`, config `src/config.ts`, bindings in `wrangler.toml`. Public `/api/*`, admin `/api/admin/*` (`ADMIN_SECRET`). Handlers: validate → query → serialize → `c.json` / `jsonError`. Migrations in `server/drizzle/`; reset via `db:reset:local` / `db:reset:remote`.
+
+## Quality bar
+
+- TypeScript only. No `any`. Types live in `types/` or colocated `lib/`; share API shapes across apps when it reduces drift.
+- Single-purpose modules. DRY without premature abstraction.
+- Typed errors, correct HTTP status, user-facing messages. No leftover `console.log`.
+- Do not commit `node_modules/`, `.next/`, `.wrangler/`.
+
+## UI
+
+Mobile-first, restrained motion, accessible contrast. Every list/form has loading, empty, and error states.
+
+## Delivery
+
+Create missing files and env examples as needed. Reply with what changed and why — no lectures.

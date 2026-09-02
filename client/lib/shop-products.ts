@@ -5,6 +5,14 @@ export type AnimalKind = "dog" | "cat" | "fish" | "bird" | "small";
 export const SHOP_CATEGORIES = ["food", "litter", "toys", "supplies"] as const;
 export type ShopCategory = (typeof SHOP_CATEGORIES)[number];
 
+export type ShopSizeOption = {
+  variantId?: string;
+  label: string;
+  priceLabel: string;
+  priceMnt: number;
+  stock?: number;
+};
+
 export type ShopProduct = {
   id: string;
   slug: string;
@@ -19,7 +27,7 @@ export type ShopProduct = {
   animals: AnimalKind[];
   shopCategory: ShopCategory;
   badge?: "best" | "new";
-  sizeOptions: { label: string; priceLabel: string }[];
+  sizeOptions: ShopSizeOption[];
   ingredients: string;
   usage: string;
   shipping: string;

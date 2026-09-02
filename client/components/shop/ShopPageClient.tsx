@@ -301,6 +301,8 @@ export function ShopPageClient({ products }: ShopPageClientProps) {
                 imageSrc={p.imageSrc}
                 imageAlt={p.imageAlt}
                 href={`/product/${p.slug}`}
+                badge={p.badge}
+                brand={p.brand}
               />
             ))}
           </div>

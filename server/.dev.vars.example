@@ -1,5 +1,2 @@
 ADMIN_SECRET=petti-dev-admin-secret
-# Cloudinary (зураг upload — заавал биш)
-# CLOUDINARY_CLOUD_NAME=
-# CLOUDINARY_API_KEY=
-# CLOUDINARY_API_SECRET=
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001

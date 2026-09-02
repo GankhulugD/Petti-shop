@@ -8,7 +8,12 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatMnt } from "@/lib/shop-products";
 
-type Summary = { subtotal: number; shipping: number; total: number };
+type Summary = {
+  subtotal: number;
+  shipping: number;
+  total: number;
+  orderNumber?: string;
+};
 
 function readOrderSummaryOnce(): Summary | null {
   if (typeof window === "undefined") return null;
@@ -52,8 +57,14 @@ export default function CheckoutSuccessPage() {
           Захиалга амжилттай
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          Төлбөр тань баталгаажлаа. Бид удахгүй танд холбогдох болно.
+          Захиалга хүлээн авлаа. Бид удахгүй танд холбогдох болно.
         </p>
+        {summary?.orderNumber ? (
+          <p className="mt-3 text-sm font-medium text-foreground">
+            Захиалгын дугаар:{" "}
+            <span className="font-mono tabular-nums">{summary.orderNumber}</span>
+          </p>
+        ) : null}
         {summary ? (
           <p className="mt-4 rounded-2xl bg-background/70 px-4 py-3 text-sm font-medium tabular-nums text-foreground">
             Нийт: {formatMnt(summary.total)}
@@ -65,6 +76,11 @@ export default function CheckoutSuccessPage() {
         >
           <Link href="/shop">Дэлгүүр хэсэх</Link>
         </Button>
+        {summary?.orderNumber ? (
+          <Button asChild variant="ghost" className="mt-2 w-full rounded-full">
+            <Link href="/track">Захиалга шалгах</Link>
+          </Button>
+        ) : null}
       </motion.div>
     </div>
   );

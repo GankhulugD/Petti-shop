@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { parseMntFromLabel } from "@/lib/parse-mnt";
 import type { ShopProduct } from "@/lib/shop-products";
 import { useCart } from "@/store/useCart";
 
@@ -137,23 +136,32 @@ export function ProductDetailView({ product }: Props) {
                 Хэмжээ сонгох
               </p>
               <div className="flex flex-wrap gap-2">
-                {product.sizeOptions.map((opt, i) => (
+                {product.sizeOptions.map((opt, i) => {
+                  const outOfStock = opt.stock !== undefined && opt.stock <= 0;
+                  return (
                   <motion.button
-                    key={opt.label}
+                    key={opt.variantId ?? opt.label}
                     type="button"
+                    disabled={outOfStock}
                     onClick={() => setSizeIndex(i)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: outOfStock ? 1 : 1.02 }}
+                    whileTap={{ scale: outOfStock ? 1 : 0.98 }}
                     className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
                       sizeIndex === i
                         ? "bg-foreground text-background"
                         : "bg-muted/60 text-foreground hover:bg-muted"
-                    }`}
+                    } ${outOfStock ? "cursor-not-allowed opacity-40" : ""}`}
                   >
                     {opt.label}
+                    {outOfStock ? " — дууссан" : null}
                   </motion.button>
-                ))}
+                );})}
               </div>
+              {product.sizeOptions[sizeIndex]?.stock !== undefined ? (
+                <p className="text-xs text-muted-foreground">
+                  Нөөц: {Math.max(0, product.sizeOptions[sizeIndex]?.stock ?? 0)} ш
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -194,17 +202,16 @@ export function ProductDetailView({ product }: Props) {
                 type="button"
                 className="h-12 w-full gap-2 rounded-full bg-[#1A1A1A] text-[#F9F9F9] hover:bg-[#1A1A1A]/90"
                 onClick={() => {
-                  const size = product.sizeOptions[sizeIndex]?.label ?? "";
-                  const priceLabel =
-                    product.sizeOptions[sizeIndex]?.priceLabel ??
-                    product.priceLabel;
-                  const priceMnt = parseMntFromLabel(priceLabel);
+                  const opt = product.sizeOptions[sizeIndex];
+                  if (!opt) return;
+                  if (opt.stock !== undefined && opt.stock <= 0) return;
                   addItem({
                     productId: product.id,
+                    variantId: opt.variantId,
                     name: product.name,
-                    priceMnt,
-                    priceLabel,
-                    size,
+                    priceMnt: opt.priceMnt,
+                    priceLabel: opt.priceLabel,
+                    size: opt.label,
                     imageSrc: product.imageSrc,
                     quantity,
                   });

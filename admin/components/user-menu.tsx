@@ -17,7 +17,7 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+        <Button variant="ghost" className="relative size-10 rounded-full p-0 md:size-9">
           <Avatar className="size-9">
             <AvatarFallback className="bg-primary text-primary-foreground text-xs font-medium">
               AD
@@ -25,7 +25,7 @@ export function UserMenu() {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end">
+      <DropdownMenuContent className="w-56" align="end" collisionPadding={12}>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">Admin</p>

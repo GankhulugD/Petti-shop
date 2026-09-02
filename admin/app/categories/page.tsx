@@ -1,6 +1,7 @@
 import { api, getAxiosPayload } from "@/lib/api-client";
 import { extractArrayFromUnknown, getApiErrorFromBody } from "@/lib/normalize-api-response";
 import { Badge } from "@/components/ui/badge";
+import { PageShell } from "@/components/page-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,7 @@ export default async function CategoriesPage() {
   const { list, error } = await loadCategories();
 
   return (
-    <div className="mx-auto max-w-[1200px] p-6 lg:p-8">
+    <PageShell>
       <p className="mb-4 text-sm text-neutral-500">{list.length} ангилал</p>
       {error ? (
         <p className="text-sm text-red-600">Ангилал татахад алдаа гарлаа.</p>
@@ -55,19 +56,19 @@ export default async function CategoriesPage() {
           {list.map((c) => (
             <li
               key={c.id}
-              className="flex items-center justify-between rounded-2xl border border-neutral-200/80 bg-white px-4 py-3 shadow-sm"
+              className="flex items-center justify-between gap-3 rounded-2xl border border-neutral-200/80 bg-white px-4 py-3 shadow-sm"
             >
-              <div>
-                <p className="font-medium text-neutral-900">{c.name}</p>
-                <p className="text-xs text-neutral-500">/{c.slug}</p>
+              <div className="min-w-0">
+                <p className="truncate font-medium text-neutral-900">{c.name}</p>
+                <p className="truncate text-xs text-neutral-500">/{c.slug}</p>
               </div>
-              <Badge variant={c.isActive ? "default" : "outline"}>
+              <Badge variant={c.isActive ? "default" : "outline"} className="shrink-0">
                 {c.isActive ? "Идэвхтэй" : "Унтраасан"}
               </Badge>
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </PageShell>
   );
 }

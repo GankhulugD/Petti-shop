@@ -14,6 +14,7 @@ import { useWishlist } from "@/store/useWishlist";
 const navItems = [
   { href: "/shop", label: "Дэлгүүр" },
   { href: "/collections", label: "Цуглуулга" },
+  { href: "/track", label: "Захиалга" },
   { href: "/about", label: "Тухай" },
 ] as const;
 

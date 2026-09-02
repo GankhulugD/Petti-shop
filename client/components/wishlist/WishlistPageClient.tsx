@@ -60,6 +60,8 @@ export function WishlistPageClient({ catalog }: { catalog: ShopProduct[] }) {
                 imageSrc={p.imageSrc}
                 imageAlt={p.imageAlt}
                 href={`/product/${p.slug}`}
+                badge={p.badge}
+                brand={p.brand}
               />
             ))}
           </div>

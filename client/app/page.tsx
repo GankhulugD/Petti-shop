@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { CategoryList } from "@/components/home/CategoryList";
 import { Hero } from "@/components/home/Hero";
+import { TrustBar } from "@/components/layout/TrustBar";
 import { ProductCard } from "@/components/products/ProductCard";
 import { fetchCatalogProducts } from "@/lib/api";
 
@@ -11,8 +12,9 @@ export default async function Home() {
   const products = await fetchCatalogProducts();
 
   return (
-    <div className="mx-auto w-full max-w-6xl flex-1 flex-col gap-10 px-4 py-8 md:gap-12 md:px-10 md:py-10">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-4 py-8 md:gap-12 md:px-10 md:py-10">
       <Hero />
+      <TrustBar />
       <CategoryList />
 
       <section aria-labelledby="flash-sale-heading">
@@ -24,7 +26,7 @@ export default async function Home() {
             Flash Sale
           </h2>
           <p className="text-sm text-foreground/50">
-            Хоол, элс, хэрэгсэл — тэжээвэр амьтандаа өнөөдөр
+            Онцлох бүтээгдэхүүн
           </p>
         </div>
 
@@ -49,6 +51,8 @@ export default async function Home() {
                 imageSrc={p.imageSrc}
                 imageAlt={p.imageAlt}
                 href={`/product/${p.slug}`}
+                badge={p.badge}
+                brand={p.brand}
               />
             ))}
           </div>

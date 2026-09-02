@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -57,27 +56,19 @@ export default function ProfilePage() {
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         className="space-y-10"
       >
-        <section className="flex flex-col items-center gap-4 rounded-3xl bg-white/90 p-8 text-center shadow-sm ring-1 ring-foreground/[0.06] sm:flex-row sm:text-left">
-          <div className="relative size-24 shrink-0 overflow-hidden rounded-3xl bg-muted ring-2 ring-foreground/[0.06]">
-            <Image
-              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80"
-              alt=""
-              fill
-              sizes="96px"
-              className="object-cover"
-            />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-semibold tracking-tight text-foreground">
-              Болд Батаа
-            </h1>
-            <p className="mt-1 truncate text-sm text-muted-foreground">
-              bataa.mn@example.com
+        <section className="rounded-3xl bg-white/90 p-8 shadow-sm ring-1 ring-foreground/[0.06]">
+          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+            Миний захиалга
+          </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Энэ төхөөрөмж дээр хийсэн захиалгууд. Бүртгэл шаардлагагүй.
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              (Жишээ профайл — бүртгэл холбогдоогүй)
-            </p>
-          </div>
+            <Link
+              href="/track"
+              className="mt-3 inline-block text-xs font-medium underline-offset-4 hover:underline"
+            >
+              Захиалгын дугаараар шалгах
+            </Link>
         </section>
 
         <section aria-labelledby="orders-heading">
@@ -113,6 +104,7 @@ export default function ProfilePage() {
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {o.itemCount} ширхэг
+                        {o.orderNumber ? ` · ${o.orderNumber}` : ""}
                       </p>
                     </div>
                     <p className="text-sm font-semibold tabular-nums text-foreground">

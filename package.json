@@ -2,15 +2,20 @@
   "name": "petti-shop",
   "private": true,
   "scripts": {
-    "dev": "npm run dev --prefix client",
+    "dev": "concurrently -n client,admin,api -c cyan,magenta,green \"npm run dev:client\" \"npm run dev:admin\" \"npm run dev:server\"",
+    "dev:all": "npm run dev",
     "dev:client": "npm run dev --prefix client",
     "dev:admin": "npm run dev --prefix admin",
     "dev:server": "npm run dev --prefix server",
-    "dev:all": "concurrently -n client,admin,api -c cyan,magenta,green \"npm run dev:client\" \"npm run dev:admin\" \"npm run dev:server\"",
-    "build": "npm run build --prefix client",
+    "build": "npm run build --prefix client && npm run build --prefix admin",
+    "build:client": "npm run build --prefix client",
     "build:admin": "npm run build --prefix admin",
+    "lint": "npm run lint --prefix client && npm run lint --prefix admin",
+    "typecheck:server": "npm run typecheck --prefix server",
     "start": "npm run start --prefix client",
-    "lint": "npm run lint --prefix client",
     "db:setup": "npm run db:setup:local --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }

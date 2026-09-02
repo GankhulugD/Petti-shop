@@ -1,4 +1,4 @@
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, like, or, sql } from "drizzle-orm";
 
 import { createDb, type Database } from "./client";
 import {
@@ -50,7 +50,13 @@ export async function loadProductBySlug(db: Database, slug: string) {
   return loadProductGraph(db, product.id);
 }
 
-export async function listActiveProducts(db: Database) {
+export async function listActiveProducts(
+  db: Database,
+  filters?: { q?: string; categorySlug?: string },
+) {
+  const q = filters?.q?.trim().toLowerCase();
+  const categorySlug = filters?.categorySlug?.trim();
+
   const rows = await db
     .select({
       product: products,
@@ -58,7 +64,19 @@ export async function listActiveProducts(db: Database) {
     })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
-    .where(eq(products.status, "active"))
+    .where(
+      and(
+        eq(products.status, "active"),
+        categorySlug ? eq(categories.slug, categorySlug) : undefined,
+        q
+          ? or(
+              like(products.name, `%${q}%`),
+              like(products.brand, `%${q}%`),
+              like(products.slug, `%${q}%`),
+            )
+          : undefined,
+      ),
+    )
     .orderBy(desc(products.updatedAt));
 
   const result = [];

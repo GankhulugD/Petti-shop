@@ -1,6 +1,7 @@
 "use client";
 
 import type { DashboardFetchResult } from "@/lib/fetch-dashboard";
+import { PageShell } from "@/components/page-shell";
 
 function formatMnt(n: number) {
   return `₮ ${new Intl.NumberFormat("mn-MN", { maximumFractionDigits: 0 }).format(n)}`;
@@ -16,9 +17,9 @@ function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-neutral-200/80 bg-white p-6 shadow-sm">
+    <div className="h-full rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-sm sm:p-6">
       <p className="text-sm font-medium text-neutral-500">{title}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight text-neutral-900 tabular-nums">
+      <p className="mt-2 break-words text-xl font-semibold tracking-tight text-neutral-900 tabular-nums sm:text-3xl">
         {value}
       </p>
       {hint ? (
@@ -34,7 +35,7 @@ export function DashboardView({ result }: { result: DashboardFetchResult }) {
 
   if (result.error === "api") {
     return (
-      <div className="mx-auto max-w-[1200px] p-6 lg:p-8">
+      <PageShell>
         <div
           role="alert"
           className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
@@ -42,13 +43,13 @@ export function DashboardView({ result }: { result: DashboardFetchResult }) {
           API холбогдсонгүй. <code className="text-xs">server</code> ажиллуулж,{" "}
           <code className="text-xs">admin/.env.local</code> тохируулна уу.
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 p-6 lg:p-8">
-      <div>
+    <PageShell className="flex flex-col gap-4 md:gap-6">
+      <div className="hidden md:block">
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
           Petti Admin
         </p>
@@ -57,7 +58,7 @@ export function DashboardView({ result }: { result: DashboardFetchResult }) {
         </h2>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard
           title="Бүтээгдэхүүн"
           value={ok ? String(s!.totalProducts) : "—"}
@@ -68,12 +69,16 @@ export function DashboardView({ result }: { result: DashboardFetchResult }) {
           value={ok ? String(s!.totalOrders) : "—"}
           hint={ok ? `${s!.pendingOrders} хүлээгдэж буй` : undefined}
         />
-        <StatCard
-          title="Орлого (нийт)"
-          value={ok ? formatMnt(s!.revenueMnt) : "—"}
-        />
-        <StatCard title="Дэлгүүр" value="Petti Shop" hint="petti-shop" />
+        <div className="col-span-2 xl:col-span-1">
+          <StatCard
+            title="Орлого (нийт)"
+            value={ok ? formatMnt(s!.revenueMnt) : "—"}
+          />
+        </div>
+        <div className="col-span-2 xl:col-span-1">
+          <StatCard title="Дэлгүүр" value="Petti Shop" hint="petti-shop" />
+        </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

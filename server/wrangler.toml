@@ -8,8 +8,9 @@ database_name = "petti-shop-db"
 database_id = "7a6b8d7d-2c23-478b-a9cf-47a15717ab75"
 migrations_dir = "drizzle"
 
-[vars]
-ADMIN_SECRET = "petti-dev-admin-secret"
+# Local dev only — production: wrangler secret put ADMIN_SECRET
+# Production CORS: wrangler secret put ALLOWED_ORIGINS
+#   e.g. https://petti.mn,https://admin.petti.mn
 
 [dev]
 port = 8787
