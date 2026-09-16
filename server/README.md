@@ -30,6 +30,17 @@ npm run db:reset:remote   # Cloudflare D1
 npm run dev   # http://localhost:8787
 ```
 
+## API docs (Swagger)
+
+Нээлттэй OpenAPI JSON endpoint **байхгүй** — spec зөвхөн admin docs HTML дотор inline байна.
+
+```bash
+# ADMIN_SECRET = server/.dev.vars
+curl -H "x-admin-secret: petti-dev-admin-secret" http://localhost:8787/api/admin/docs > docs.html && open docs.html
+```
+
+Header-гүй хүсэлт 401 буцаана. Swagger UI дээр **Authorize** → `x-admin-secret` оруулж admin endpoint-уудыг туршина.
+
 ## D1
 
-`petti-shop-db` · `7a6b8d7d-2c23-478b-a9cf-47a15717ab75`
+`petti-shop-db` · `49cf2b4c-430a-4028-ba5b-a42d1ad3aaf2`

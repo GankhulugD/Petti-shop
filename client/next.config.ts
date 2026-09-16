@@ -6,13 +6,6 @@ import type { NextConfig } from "next";
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
-  /** Client navigation — don't reuse old product RSC after API goes down */
-  experimental: {
-    staleTimes: {
-      dynamic: 0,
-      static: 180,
-    },
-  },
   turbopack: {
     root: projectRoot,
   },

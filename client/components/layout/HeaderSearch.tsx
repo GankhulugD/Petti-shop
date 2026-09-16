@@ -1,35 +1,18 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 
-type SearchFieldsProps = {
-  mode: "shop" | "browse";
-  initialQuery: string;
-};
-
-function SearchFields({ mode, initialQuery }: SearchFieldsProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const sp = useSearchParams();
-  const [value, setValue] = useState(initialQuery);
-
-  const submit = useCallback(() => {
-    const q = value.trim();
-    if (mode === "shop" && pathname === "/shop") {
-      const params = new URLSearchParams(sp.toString());
-      if (q) params.set("q", q);
-      else params.delete("q");
-      const qs = params.toString();
-      router.push(qs ? `/shop?${qs}` : "/shop");
-    } else if (q) {
-      router.push(`/shop?q=${encodeURIComponent(q)}`);
-    } else {
-      router.push("/shop");
-    }
-  }, [mode, pathname, router, sp, value]);
-
+function SearchInputs({
+  value,
+  onChange,
+  onSubmit,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onSubmit: () => void;
+}) {
   return (
     <>
       <div className="relative mx-auto hidden min-w-0 max-w-md flex-1 md:flex">
@@ -44,11 +27,11 @@ function SearchFields({ mode, initialQuery }: SearchFieldsProps) {
           id="site-search"
           type="search"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              submit();
+              onSubmit();
             }
           }}
           placeholder="Хоол, элс, хэрэгсэл хайх…"
@@ -68,11 +51,11 @@ function SearchFields({ mode, initialQuery }: SearchFieldsProps) {
           id="site-search-mobile"
           type="search"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
               e.preventDefault();
-              submit();
+              onSubmit();
             }
           }}
           placeholder="Хоол, элс…"
@@ -84,14 +67,40 @@ function SearchFields({ mode, initialQuery }: SearchFieldsProps) {
   );
 }
 
+function readShopQuery(): string {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("q") ?? "";
+}
+
 export function HeaderSearch() {
+  const router = useRouter();
   const pathname = usePathname();
-  const sp = useSearchParams();
-  const qFromShop = pathname === "/shop" ? (sp.get("q") ?? "") : "";
+  const onShop = pathname === "/shop";
+  const [value, setValue] = useState("");
 
-  if (pathname === "/shop") {
-    return <SearchFields key={qFromShop} mode="shop" initialQuery={qFromShop} />;
-  }
+  useEffect(() => {
+    setValue(onShop ? readShopQuery() : "");
+  }, [onShop, pathname]);
 
-  return <SearchFields key="browse" mode="browse" initialQuery="" />;
+  const submit = useCallback(() => {
+    const q = value.trim();
+    if (!onShop) {
+      if (q) router.push(`/shop?q=${encodeURIComponent(q)}`);
+      else router.push("/shop");
+      return;
+    }
+    const params = new URLSearchParams(window.location.search);
+    if (q) params.set("q", q);
+    else params.delete("q");
+    const qs = params.toString();
+    const next = qs ? `/shop?${qs}` : "/shop";
+    const current = `${window.location.pathname}${window.location.search}`;
+    if (current === next) return;
+    window.history.replaceState(window.history.state, "", next);
+    window.dispatchEvent(new Event("petti:shop-url"));
+  }, [onShop, router, value]);
+
+  return (
+    <SearchInputs value={value} onChange={setValue} onSubmit={submit} />
+  );
 }

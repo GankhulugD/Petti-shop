@@ -29,12 +29,11 @@ function formatDate(iso: string): string {
 }
 
 export default function ProfilePage() {
-  const [orders, setOrders] = useState<OrderHistoryEntry[]>(() =>
-    readOrderHistory(),
-  );
+  const [orders, setOrders] = useState<OrderHistoryEntry[]>([]);
 
   useEffect(() => {
     const refresh = () => setOrders(readOrderHistory());
+    refresh();
     const onStorage = (e: StorageEvent) => {
       if (e.key === ORDER_HISTORY_KEY || e.key === null) {
         refresh();

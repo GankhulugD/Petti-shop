@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Accordion,
@@ -57,10 +57,15 @@ export function FilterSidebar({
   priceMin,
   priceMax,
 }: FilterSidebarProps) {
-  const searchParams = useSearchParams();
-  const urlQ = searchParams.get("q");
+  const urlQ = filters.q;
+  const [draftRange, setDraftRange] = useState<[number, number]>([
+    filters.priceMin,
+    filters.priceMax,
+  ]);
 
-  const priceRange: [number, number] = [filters.priceMin, filters.priceMax];
+  useEffect(() => {
+    setDraftRange([filters.priceMin, filters.priceMax]);
+  }, [filters.priceMin, filters.priceMax]);
 
   return (
     <motion.aside
@@ -194,17 +199,28 @@ export function FilterSidebar({
             <AccordionContent className="pb-3">
               <div className="space-y-4 pt-1">
                 <p className="text-xs tabular-nums text-muted-foreground">
-                  {formatMnt(priceRange[0])} — {formatMnt(priceRange[1])}
+                  {formatMnt(draftRange[0])} — {formatMnt(draftRange[1])}
                 </p>
                 <Slider
                   min={priceMin}
                   max={priceMax}
                   step={5000}
-                  value={priceRange}
+                  value={draftRange}
                   onValueChange={(v) => {
                     if (v.length >= 2) {
-                      onPriceRangeChange([v[0]!, v[1]!]);
+                      setDraftRange([v[0]!, v[1]!]);
                     }
+                  }}
+                  onValueCommit={(v) => {
+                    if (v.length < 2) return;
+                    const next: [number, number] = [v[0]!, v[1]!];
+                    if (
+                      next[0] === filters.priceMin &&
+                      next[1] === filters.priceMax
+                    ) {
+                      return;
+                    }
+                    onPriceRangeChange(next);
                   }}
                   className="py-1"
                 />

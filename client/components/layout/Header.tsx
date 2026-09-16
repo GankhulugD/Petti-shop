@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Suspense, useMemo } from "react";
+import { useMemo } from "react";
 import { Heart, ShoppingBag, UserRound } from "lucide-react";
 
 import { HeaderSearch } from "@/components/layout/HeaderSearch";
@@ -80,13 +80,7 @@ export function Header() {
           })}
         </nav>
 
-        <Suspense
-          fallback={
-            <div className="mx-auto hidden h-11 max-w-md flex-1 rounded-full bg-muted/40 md:flex" />
-          }
-        >
-          <HeaderSearch />
-        </Suspense>
+        <HeaderSearch />
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <Link

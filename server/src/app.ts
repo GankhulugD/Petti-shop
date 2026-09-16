@@ -15,6 +15,7 @@ import type { WorkerEnv } from "@/env";
 import { requireAdmin } from "@/lib/admin";
 import { apiCorsMiddleware } from "@/lib/cors";
 import { jsonError } from "@/lib/errors";
+import { registerAdminDocsRoutes } from "@/routes/admin-docs";
 import { registerAdminProductRoutes } from "@/routes/admin-products";
 import {
   serializeCategory,
@@ -299,6 +300,7 @@ app.patch("/api/admin/orders/:id", async (c) => {
   return c.json(serializeOrder(updated!, items));
 });
 
+registerAdminDocsRoutes(app);
 registerAdminProductRoutes(app);
 
 /** Admin panel backward compat */

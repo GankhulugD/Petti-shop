@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  startTransition,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { SlidersHorizontal } from "lucide-react";
 
@@ -98,6 +90,19 @@ function brandsToRecord(
   return Object.fromEntries(allBrands.map((b) => [b, brands.includes(b)]));
 }
 
+function readShopSearch(): string {
+  if (typeof window === "undefined") return "";
+  return window.location.search.replace(/^\?/, "");
+}
+
+function writeShopPath(path: string) {
+  if (typeof window === "undefined") return;
+  const current = `${window.location.pathname}${window.location.search}`;
+  if (current === path) return;
+  window.history.replaceState(window.history.state, "", path);
+  window.dispatchEvent(new Event("petti:shop-url"));
+}
+
 type ShopPageClientProps = {
   products: ShopProduct[];
 };
@@ -107,27 +112,31 @@ export function ShopPageClient({ products }: ShopPageClientProps) {
     () => [...new Set(products.map((p) => p.brand).filter(Boolean))].sort(),
     [products],
   );
-  const router = useRouter();
-  const sp = useSearchParams();
-  const spString = sp.toString();
+  const [spString, setSpString] = useState("");
   const openCartSheet = useCart((s) => s.openSheet);
   const openCartHandledRef = useRef(false);
 
   useEffect(() => {
+    const sync = () => setSpString(readShopSearch());
+    sync();
+    window.addEventListener("popstate", sync);
+    window.addEventListener("petti:shop-url", sync);
+    return () => {
+      window.removeEventListener("popstate", sync);
+      window.removeEventListener("petti:shop-url", sync);
+    };
+  }, []);
+
+  useEffect(() => {
     const params = new URLSearchParams(spString);
-    if (params.get("openCart") !== "1") {
-      openCartHandledRef.current = false;
-      return;
-    }
+    if (params.get("openCart") !== "1") return;
     if (openCartHandledRef.current) return;
     openCartHandledRef.current = true;
     openCartSheet();
     params.delete("openCart");
     const qs = params.toString();
-    startTransition(() => {
-      router.replace(qs ? `/shop?${qs}` : "/shop", { scroll: false });
-    });
-  }, [spString, router, openCartSheet]);
+    writeShopPath(qs ? `/shop?${qs}` : "/shop");
+  }, [spString, openCartSheet]);
 
   const filters = useMemo(
     () => parseShopSearchParams(new URLSearchParams(spString || "")),
@@ -136,17 +145,13 @@ export function ShopPageClient({ products }: ShopPageClientProps) {
 
   const pushFilters = useCallback(
     (patch: Partial<ShopUrlFilters>) => {
-      const qsRaw =
-        typeof window !== "undefined"
-          ? window.location.search.replace(/^\?/, "")
-          : spString;
-      const current = parseShopSearchParams(new URLSearchParams(qsRaw));
+      const current = parseShopSearchParams(new URLSearchParams(readShopSearch()));
       const next: ShopUrlFilters = { ...current, ...patch };
-      startTransition(() => {
-        router.replace(shopPathFromFilters(next), { scroll: false });
-      });
+      const nextPath = shopPathFromFilters(next);
+      writeShopPath(nextPath);
+      setSpString(nextPath.includes("?") ? nextPath.slice(nextPath.indexOf("?") + 1) : "");
     },
-    [router, spString],
+    [],
   );
 
   const animalState = useMemo(
@@ -287,10 +292,7 @@ export function ShopPageClient({ products }: ShopPageClientProps) {
             </div>
           </div>
 
-          <div
-            key={`${spString}-${filtered.map((p) => p.id).join(",")}`}
-            className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
-          >
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {filtered.map((p) => (
               <ProductCard
                 key={p.id}

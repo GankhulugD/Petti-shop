@@ -5,7 +5,7 @@ compatibility_date = "2024-12-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "petti-shop-db"
-database_id = "7a6b8d7d-2c23-478b-a9cf-47a15717ab75"
+database_id = "49cf2b4c-430a-4028-ba5b-a42d1ad3aaf2"
 migrations_dir = "drizzle"
 
 # Local dev only — production: wrangler secret put ADMIN_SECRET
