@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { uploadProductImage } from "@/lib/actions/media";
 import { saveProduct } from "@/lib/actions/products";
 
 const CATEGORIES = [
@@ -59,10 +60,38 @@ export function ProductForm({ initial }: { initial?: Partial<ProductFormValues> 
   const router = useRouter();
   const [form, setForm] = useState<ProductFormValues>({ ...empty, ...initial });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function set<K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  async function onImagePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setError(null);
+    setUploading(true);
+    const fd = new FormData();
+    fd.set("file", file);
+    const result = await uploadProductImage(fd);
+    setUploading(false);
+
+    if (!result.ok) {
+      setError(result.message);
+      return;
+    }
+
+    const lines = form.images
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (!lines.includes(result.url)) {
+      lines.push(result.url);
+    }
+    set("images", lines.join("\n"));
   }
 
   async function submit() {
@@ -220,15 +249,30 @@ export function ProductForm({ initial }: { initial?: Partial<ProductFormValues> 
           />
         </label>
       </div>
-      <label className="space-y-1 text-sm">
-        <span className="font-medium">Зургийн URL (мөр бүрт нэг)</span>
+      <div className="space-y-2 text-sm">
+        <span className="font-medium">Зураг</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="inline-flex cursor-pointer items-center rounded-full border border-neutral-200 px-4 py-2 text-sm font-medium hover:bg-neutral-50">
+            {uploading ? "Хуулж байна…" : "R2-д хуулах"}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
+              disabled={uploading || saving}
+              onChange={onImagePick}
+            />
+          </label>
+          <span className="text-xs text-neutral-500">
+            JPEG, PNG, WebP, GIF · хамгийн ихдээ 5MB
+          </span>
+        </div>
         <textarea
           className="min-h-24 w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm"
           value={form.images}
           onChange={(e) => set("images", e.target.value)}
-          placeholder="https://…"
+          placeholder="R2 upload эсвэл https://… URL (мөр бүрт нэг)"
         />
-      </label>
+      </div>
       <label className="space-y-1 text-sm">
         <span className="font-medium">Тайлбар</span>
         <textarea

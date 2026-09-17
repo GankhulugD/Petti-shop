@@ -27,13 +27,26 @@ npm run db:reset:remote   # эхний удаа
 npm run deploy
 ```
 
-### ALLOWED_ORIGINS шинэчлэх (Vercel deploy хийсний дараа заавал)
+### ALLOWED_ORIGINS шинэчлэх (checkout / track зэрэг шууд API дуудлагад)
+
+Storefront каталог одоо **Next.js BFF** (`/api/catalog`) ашиглана — CORS шаардлагагүй. Гэхдээ `ALLOWED_ORIGINS` дээр Vercel URL-үүд байх нь зүйтэй.
 
 ```bash
 cd server
-printf '%s' 'https://YOUR-CLIENT.vercel.app,https://YOUR-ADMIN.vercel.app,http://localhost:3000,http://localhost:3001' \
+printf '%s' 'https://petti-shop.vercel.app,https://YOUR-ADMIN.vercel.app,http://localhost:3000,http://localhost:3001' \
   | npx wrangler secret put ALLOWED_ORIGINS
 ```
+
+### R2 зураг (Cloudflare Dashboard → R2 идэвхжүүлэх)
+
+```bash
+cd server
+npx wrangler r2 bucket create petti-images
+printf '%s' 'https://petti-api.gankhulug-d.workers.dev' | npx wrangler secret put MEDIA_PUBLIC_URL
+npm run deploy
+```
+
+Admin дээр бараа засах → **R2-д хуулах** товчоор зураг upload хийнэ. Хуучин Unsplash URL-үүд хэвээр ажиллана.
 
 ---
 

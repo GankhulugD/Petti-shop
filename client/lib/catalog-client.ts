@@ -102,10 +102,14 @@ export async function fetchCatalogCached(
   if (filters?.limit) params.set("limit", String(filters.limit));
   const qs = params.toString();
 
-  const res = await fetch(
-    `${getApiBaseUrl()}${qs ? `/api/products?${qs}` : "/api/products"}`,
-    { cache: "default" },
-  );
+  const url =
+    typeof window !== "undefined"
+      ? qs
+        ? `/api/catalog?${qs}`
+        : "/api/catalog"
+      : `${getApiBaseUrl()}${qs ? `/api/products?${qs}` : "/api/products"}`;
+
+  const res = await fetch(url, { cache: "default" });
   if (!res.ok) throw new Error("catalog fetch failed");
   const body = (await res.json()) as { items?: ApiProduct[] } | ApiProduct[];
   const list = Array.isArray(body) ? body : (body.items ?? []);

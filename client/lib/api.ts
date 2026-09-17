@@ -238,7 +238,10 @@ export const fetchProductBySlug = cache(
 export async function createOrder(
   input: CreateOrderInput,
 ): Promise<{ ok: true; data: CreateOrderResult } | { ok: false; message: string }> {
-  const url = `${getApiBaseUrl()}/api/orders`;
+  const url =
+    typeof window !== "undefined"
+      ? "/api/orders"
+      : `${getApiBaseUrl()}/api/orders`;
   try {
     const res = await fetch(url, {
       method: "POST",

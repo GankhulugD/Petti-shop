@@ -8,9 +8,17 @@ database_name = "petti-shop-db"
 database_id = "49cf2b4c-430a-4028-ba5b-a42d1ad3aaf2"
 migrations_dir = "drizzle"
 
+# R2 — Cloudflare Dashboard → R2 идэвхжүүлсний дараа доорх мөрийг uncomment хийнэ:
+# [[r2_buckets]]
+# binding = "IMAGES"
+# bucket_name = "petti-images"
+# Дараа нь: wrangler r2 bucket create petti-images && npm run deploy
+
 # Local dev only — production: wrangler secret put ADMIN_SECRET
 # Production CORS: wrangler secret put ALLOWED_ORIGINS
-#   e.g. https://petti.mn,https://admin.petti.mn
+#   e.g. https://petti-shop.vercel.app,https://admin.vercel.app
+# Media URLs: wrangler secret put MEDIA_PUBLIC_URL
+#   e.g. https://petti-api.gankhulug-d.workers.dev
 
 [dev]
 port = 8787

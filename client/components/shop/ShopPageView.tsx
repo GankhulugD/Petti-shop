@@ -33,7 +33,7 @@ export function ShopPageView() {
     };
   }, []);
 
-  if (products === null) {
+  if (products === null && !error) {
     return (
       <ShopPageClient products={[]} loading>
         <ProductGridSkeleton count={8} />
@@ -41,11 +41,11 @@ export function ShopPageView() {
     );
   }
 
-  if (error && products.length === 0) {
+  if (error || products === null) {
     return (
       <ShopPageClient products={[]} loading={false}>
         <p className="py-12 text-center text-sm text-muted-foreground">
-          Бараа татахад алдаа гарлаа. Дахин оролдоно уу.
+          Бараа татахад алдаа гарлаа. Хуудсыг дахин ачааллана уу.
         </p>
       </ShopPageClient>
     );

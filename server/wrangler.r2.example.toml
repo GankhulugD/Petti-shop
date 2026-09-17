@@ -1,0 +1,5 @@
+# R2 идэвхжүүлсний дараа wrangler.toml дотор нэмнэ:
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "petti-images"

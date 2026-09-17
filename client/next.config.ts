@@ -21,6 +21,11 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "petti-api.gankhulug-d.workers.dev",
+        pathname: "/api/media/**",
+      },
     ],
   },
 };

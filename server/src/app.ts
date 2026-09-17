@@ -15,8 +15,11 @@ import type { WorkerEnv } from "@/env";
 import { requireAdmin } from "@/lib/admin";
 import { apiCorsMiddleware } from "@/lib/cors";
 import { jsonError } from "@/lib/errors";
+import { getApiPublicBase, withProductMedia } from "@/lib/media";
 import { registerAdminDocsRoutes } from "@/routes/admin-docs";
+import { registerAdminMediaRoutes } from "@/routes/admin-media";
 import { registerAdminProductRoutes } from "@/routes/admin-products";
+import { registerMediaRoutes } from "@/routes/media";
 import {
   serializeCategory,
   serializeOrder,
@@ -56,13 +59,15 @@ app.get("/api/products", async (c) => {
   const categorySlug = c.req.query("cat") ?? c.req.query("category") ?? undefined;
   const limitRaw = c.req.query("limit");
   const limit = limitRaw ? Number(limitRaw) : undefined;
+  const apiBase = getApiPublicBase(c.env, c.req.url);
+  const items = await listActiveProducts(db, {
+    q,
+    categorySlug,
+    limit: Number.isFinite(limit) ? limit : undefined,
+  });
   c.header("Cache-Control", PUBLIC_CACHE);
   return c.json({
-    items: await listActiveProducts(db, {
-      q,
-      categorySlug,
-      limit: Number.isFinite(limit) ? limit : undefined,
-    }),
+    items: items.map((item) => withProductMedia(item, apiBase)),
   });
 });
 
@@ -70,9 +75,13 @@ app.get("/api/products/:slug", async (c) => {
   const db = createDb(c.env.DB);
   const graph = await loadProductBySlug(db, c.req.param("slug"));
   if (!graph) return jsonError(c, "product not found", 404);
+  const apiBase = getApiPublicBase(c.env, c.req.url);
   c.header("Cache-Control", PUBLIC_CACHE);
   return c.json(
-    serializeProductDetail(graph.product, graph.variants, graph.category),
+    withProductMedia(
+      serializeProductDetail(graph.product, graph.variants, graph.category),
+      apiBase,
+    ),
   );
 });
 
@@ -316,6 +325,8 @@ app.patch("/api/admin/orders/:id", async (c) => {
   return c.json(serializeOrder(updated!, items));
 });
 
+registerMediaRoutes(app);
+registerAdminMediaRoutes(app);
 registerAdminDocsRoutes(app);
 registerAdminProductRoutes(app);
 
