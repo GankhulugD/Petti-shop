@@ -5,7 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { api } from "@/lib/api-client";
+import { saveProduct } from "@/lib/actions/products";
 
 const CATEGORIES = [
   { slug: "food", name: "Хоол" },
@@ -100,15 +100,17 @@ export function ProductForm({ initial }: { initial?: Partial<ProductFormValues> 
     };
 
     try {
-      if (form.id) {
-        await api.patch(`/api/admin/products/${form.id}`, payload);
+      const result = await saveProduct(form.id, payload);
+      if (result.ok) {
+        router.push("/products");
+        router.refresh();
       } else {
-        await api.post("/api/admin/products", payload);
+        setError(
+          result.error === "config"
+            ? "API тохиргоо дутуу. NEXT_PUBLIC_API_URL болон ADMIN_SECRET шалгана уу."
+            : "Хадгалахад алдаа гарлаа.",
+        );
       }
-      router.push("/products");
-      router.refresh();
-    } catch {
-      setError("Хадгалахад алдаа гарлаа. API болон ADMIN_SECRET шалгана уу.");
     } finally {
       setSaving(false);
     }

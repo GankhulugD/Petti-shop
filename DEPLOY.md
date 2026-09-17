@@ -4,78 +4,91 @@
 
 ```
 client (storefront)  ──►  server (Hono + D1)  ◄──  admin
-   :3000                      :8787 / api.*              :3001
+                         petti-api.*.workers.dev
 ```
 
-## 1. Server (Cloudflare Workers)
+## Одоогийн production API
+
+```
+https://petti-api.gankhulug-d.workers.dev
+```
+
+Account: `gankhulug.d@techpack.mn` · D1: `petti-shop-db` (`49cf2b4c-430a-4028-ba5b-a42d1ad3aaf2`)
+
+---
+
+## 1. Server (Cloudflare Workers) — хийгдсэн
 
 ```bash
 cd server
-cp .dev.vars.example .dev.vars   # local only
-
-# Secrets (production)
-wrangler secret put ADMIN_SECRET
-wrangler secret put ALLOWED_ORIGINS
-# ALLOWED_ORIGINS жишээ: https://petti.mn,https://admin.petti.mn
-
-npm run db:reset:remote          # эхний удаа: schema + seed
+npx wrangler secret put ADMIN_SECRET
+npx wrangler secret put ALLOWED_ORIGINS
+npm run db:reset:remote   # эхний удаа
 npm run deploy
 ```
 
-API URL: `https://petti-api.<account>.workers.dev` эсвэл custom domain.
-
-## 2. Client (Vercel / Cloudflare Pages)
+### ALLOWED_ORIGINS шинэчлэх (Vercel deploy хийсний дараа заавал)
 
 ```bash
-cd client
-cp .env.local.example .env.local
+cd server
+printf '%s' 'https://YOUR-CLIENT.vercel.app,https://YOUR-ADMIN.vercel.app,http://localhost:3000,http://localhost:3001' \
+  | npx wrangler secret put ALLOWED_ORIGINS
 ```
 
-| Env | Жишээ |
-|-----|--------|
-| `NEXT_PUBLIC_API_URL` | `https://api.petti.mn` |
-| `NEXT_PUBLIC_SITE_URL` | `https://petti.mn` |
+---
+
+## 2. Client (Vercel)
+
+1. [vercel.com](https://vercel.com) → **New Project** → repo сонгох
+2. **Root Directory:** `client`
+3. Framework: Next.js (автоматаар)
+
+| Env | Утга |
+|-----|------|
+| `NEXT_PUBLIC_API_URL` | `https://petti-api.gankhulug-d.workers.dev` |
+| `NEXT_PUBLIC_SITE_URL` | `https://YOUR-CLIENT.vercel.app` |
 
 ```bash
-npm run build
-# Vercel: root = client/
-# Pages: build command npm run build, output .next (adapter) or use @cloudflare/next-on-pages
+cd client && npm run build   # local шалгалт
 ```
 
-## 3. Admin (Vercel / Cloudflare Pages)
+---
+
+## 3. Admin (Vercel)
+
+1. **Тусдаа** Vercel project (client-ээс өөр)
+2. **Root Directory:** `admin`
+
+| Env | Утга |
+|-----|------|
+| `NEXT_PUBLIC_API_URL` | `https://petti-api.gankhulug-d.workers.dev` |
+| `ADMIN_SECRET` | server `ADMIN_SECRET`-тай **ижил** (server-only, browser руу орохгүй) |
+
+Admin mutation (бараа хадгалах, захиалга шинэчлэх) **Server Actions**-аар ажиллана — Vercel дээр `ADMIN_SECRET` зөвхөн server талд хэрэглэгдэнэ.
 
 ```bash
-cd admin
-cp .env.local.example .env.local
+cd admin && npm run build   # local шалгалт
 ```
 
-| Env | Жишээ |
-|-----|--------|
-| `NEXT_PUBLIC_API_URL` | `https://api.petti.mn` |
-| `ADMIN_SECRET` | server-тэй ижил |
-
-```bash
-npm run build
-```
+---
 
 ## Local dev
 
 ```bash
-# Root-оос — client :3000, admin :3001, api :8787
-npm run dev
-
-# Эсвэл тусад нь:
-npm run dev:server   # :8787
-npm run dev:client   # :3000
-npm run dev:admin    # :3001
+npm run dev   # client :3000 · admin :3001 · api :8787
 ```
+
+---
 
 ## Checklist
 
-- [ ] D1 remote migration + seed
-- [ ] `ADMIN_SECRET` production secret
-- [ ] `ALLOWED_ORIGINS` client + admin URL
-- [ ] Client/admin env production URL
-- [ ] Checkout → `POST /api/orders` ажиллаж байгаа эсэх
+- [x] D1 remote migration + seed
+- [x] Worker deploy (`petti-api`)
+- [x] `ADMIN_SECRET` production secret
+- [x] `ALLOWED_ORIGINS` (localhost; Vercel URL нэмэх)
+- [ ] Client Vercel deploy + env
+- [ ] Admin Vercel deploy + env
+- [ ] `ALLOWED_ORIGINS` дээр Vercel URL нэмэх
+- [ ] Checkout → `POST /api/orders`
 - [ ] Admin бараа нэмэх, захиалгын төлөв солих
 - [ ] `/track` захиалга шалгах

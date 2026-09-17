@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { OrderDisplay } from "@/lib/fetch-orders";
-import { patchOrderStatus } from "@/lib/patch-order";
+import { patchOrderStatus } from "@/lib/actions/orders";
 import { PageShell } from "@/components/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
