@@ -12,12 +12,13 @@ import {
 import type { ShopProduct } from "@/lib/shop-products";
 
 export function FlashSaleSection() {
-  const [products, setProducts] = useState<ShopProduct[] | null>(() =>
-    readCatalogCache({ limit: 8 }),
-  );
+  const [products, setProducts] = useState<ShopProduct[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    const cached = readCatalogCache({ limit: 8 });
+    if (cached?.length) setProducts(cached);
+
     fetchCatalogCached({ limit: 8 })
       .then((data) => {
         if (!cancelled) setProducts(data);

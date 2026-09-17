@@ -11,12 +11,13 @@ import {
 import type { ShopProduct } from "@/lib/shop-products";
 
 export function WishlistPageView() {
-  const [catalog, setCatalog] = useState<ShopProduct[] | null>(() =>
-    readCatalogCache(),
-  );
+  const [catalog, setCatalog] = useState<ShopProduct[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    const cached = readCatalogCache();
+    if (cached?.length) setCatalog(cached);
+
     fetchCatalogCached()
       .then((data) => {
         if (!cancelled) setCatalog(data);

@@ -11,13 +11,14 @@ import {
 import type { ShopProduct } from "@/lib/shop-products";
 
 export function ShopPageView() {
-  const [products, setProducts] = useState<ShopProduct[] | null>(() =>
-    readCatalogCache(),
-  );
+  const [products, setProducts] = useState<ShopProduct[] | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    const cached = readCatalogCache();
+    if (cached?.length) setProducts(cached);
+
     fetchCatalogCached()
       .then((data) => {
         if (!cancelled) {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import {
   Accordion,
   AccordionContent,
@@ -108,12 +107,7 @@ export function FilterSidebar({
   const urlQ = filters.q;
 
   return (
-    <motion.aside
-      initial={{ opacity: 0, x: -8 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="w-full shrink-0 md:max-w-[17.5rem]"
-    >
+    <aside className="w-full shrink-0 md:max-w-[17.5rem]">
       <div className="rounded-2xl bg-muted/50 p-4 shadow-none ring-0">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-semibold text-foreground">Шүүлтүүр</p>
@@ -127,34 +121,32 @@ export function FilterSidebar({
         <div className="mb-4 space-y-2">
           <p className="text-xs font-medium text-foreground/70">Ангилал</p>
           <div className="flex flex-wrap gap-1.5">
-            <motion.button
+            <button
               type="button"
-              whileTap={{ scale: 0.97 }}
               onClick={() => onCategoryChange(null)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition-transform active:scale-[0.97] ${
                 filters.cat == null
                   ? "bg-foreground text-background"
                   : "bg-background/60 text-foreground/80 hover:bg-background"
               }`}
             >
               Бүгд
-            </motion.button>
+            </button>
             {CATEGORY_OPTIONS.map(({ id, label }) => {
               const on = filters.cat === id;
               return (
-                <motion.button
+                <button
                   key={id}
                   type="button"
-                  whileTap={{ scale: 0.97 }}
                   onClick={() => onCategoryChange(on ? null : id)}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-transform active:scale-[0.97] ${
                     on
                       ? "bg-foreground text-background"
                       : "bg-background/60 text-foreground/80 hover:bg-background"
                   }`}
                 >
                   {label}
-                </motion.button>
+                </button>
               );
             })}
           </div>
@@ -175,10 +167,9 @@ export function FilterSidebar({
             <AccordionContent className="pb-3">
               <div className="flex flex-col gap-3 pt-1">
                 {ANIMAL_OPTIONS.map(({ id, label }) => (
-                  <motion.div
+                  <div
                     key={id}
-                    className="flex items-center gap-3"
-                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-3 transition-transform active:scale-[0.98]"
                   >
                     <Checkbox
                       id={`animal-${id}`}
@@ -191,7 +182,7 @@ export function FilterSidebar({
                     >
                       {label}
                     </Label>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </AccordionContent>
@@ -207,10 +198,9 @@ export function FilterSidebar({
             <AccordionContent className="pb-3">
               <div className="flex max-h-48 flex-col gap-3 overflow-y-auto pt-1 pr-1">
                 {brands.map((brand) => (
-                  <motion.div
+                  <div
                     key={brand}
-                    className="flex items-center gap-3"
-                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-3 transition-transform active:scale-[0.98]"
                   >
                     <Checkbox
                       id={`brand-${brand}`}
@@ -223,7 +213,7 @@ export function FilterSidebar({
                     >
                       {brand}
                     </Label>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </AccordionContent>
@@ -248,6 +238,6 @@ export function FilterSidebar({
           </AccordionItem>
         </Accordion>
       </div>
-    </motion.aside>
+    </aside>
   );
 }

@@ -2,84 +2,209 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, Home, ShoppingBag, UserRound } from "lucide-react";
+import { useMemo } from "react";
+import {
+  Heart,
+  Home,
+  ShoppingBag,
+  Store,
+  UserRound,
+  type LucideIcon,
+} from "lucide-react";
 
 import { useStoreHydrated } from "@/hooks/use-store-hydrated";
+import { cn } from "@/lib/utils";
 import { useCart } from "@/store/useCart";
-import { useWishlist } from "@/store/useWishlist";
 
-const items = [
-  { href: "/", label: "Нүүр", icon: Home, mode: "link" as const },
-  { href: "/cart", label: "Сагс", icon: ShoppingBag, mode: "cart" as const },
-  { href: "/wishlist", label: "Дуртай", icon: Heart, mode: "link" as const },
-  { href: "/profile", label: "Профайл", icon: UserRound, mode: "link" as const },
-] as const;
+type NavItem = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  href?: string;
+  badge?: number;
+  isActive: (pathname: string, cartOpen: boolean) => boolean;
+};
+
+const items: NavItem[] = [
+  {
+    id: "home",
+    href: "/",
+    label: "Нүүр",
+    icon: Home,
+    isActive: (p) => p === "/" || p === "",
+  },
+  {
+    id: "wishlist",
+    href: "/wishlist",
+    label: "Дуртай",
+    icon: Heart,
+    isActive: (p) => p === "/wishlist" || p.startsWith("/wishlist/"),
+  },
+  {
+    id: "shop",
+    href: "/shop",
+    label: "Дэлгүүр",
+    icon: Store,
+    isActive: (p) =>
+      p === "/shop" ||
+      p.startsWith("/shop/") ||
+      p.startsWith("/product/"),
+  },
+  {
+    id: "cart",
+    label: "Сагс",
+    icon: ShoppingBag,
+    isActive: (p, cartOpen) =>
+      cartOpen || p === "/checkout" || p.startsWith("/checkout/"),
+  },
+  {
+    id: "profile",
+    href: "/profile",
+    label: "Профайл",
+    icon: UserRound,
+    isActive: (p) => p === "/profile" || p.startsWith("/profile/"),
+  },
+];
+
+function CatEars() {
+  return (
+    <>
+      <span
+        className="pointer-events-none absolute -top-1 left-[5%] z-10 block h-0 w-0 border-x-[8px] border-x-transparent border-b-[12px] border-b-white -rotate-[26deg]"
+        aria-hidden
+      />
+      <span
+        className="pointer-events-none absolute -top-1 right-[5%] z-10 block h-0 w-0 border-x-[8px] border-x-transparent border-b-[12px] border-b-white rotate-[26deg]"
+        aria-hidden
+      />
+    </>
+  );
+}
+
+function TabContent({
+  active,
+  icon: Icon,
+  label,
+  badge,
+}: {
+  active: boolean;
+  icon: LucideIcon;
+  label: string;
+  badge?: number;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative flex w-full flex-col items-center justify-center gap-0.5 px-2 py-2.5 transition-colors",
+        active
+          ? "rounded-full bg-white text-[#1A1A1A] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)]"
+          : "rounded-full text-white/55 hover:bg-white/10 hover:text-white/90",
+      )}
+    >
+      {active ? <CatEars /> : null}
+      <Icon
+        className={cn("size-5", active ? "stroke-[2]" : "stroke-[1.5]")}
+        aria-hidden
+      />
+      {badge != null && badge > 0 ? (
+        <span
+          className={cn(
+            "absolute right-2 top-1.5 flex min-h-[14px] min-w-[14px] items-center justify-center rounded-full px-0.5 text-[9px] font-bold leading-none",
+            active ? "bg-[#1A1A1A] text-white" : "bg-white text-[#1A1A1A]",
+          )}
+        >
+          {badge > 99 ? "99+" : badge}
+        </span>
+      ) : null}
+      <span className="truncate text-[10px] font-medium leading-none">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function NavTab({
+  item,
+  active,
+  badge,
+  onCartClick,
+}: {
+  item: NavItem;
+  active: boolean;
+  badge?: number;
+  onCartClick?: () => void;
+}) {
+  const shellClass =
+    "relative mx-0.5 flex min-w-0 flex-1 flex-col items-center justify-end pt-1";
+
+  const content = (
+    <TabContent
+      active={active}
+      icon={item.icon}
+      label={item.label}
+      badge={badge}
+    />
+  );
+
+  if (item.id === "cart" && onCartClick) {
+    return (
+      <button
+        type="button"
+        onClick={onCartClick}
+        className={shellClass}
+        aria-label="Сагс нээх"
+        aria-pressed={active}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link
+      href={item.href!}
+      className={shellClass}
+      aria-current={active ? "page" : undefined}
+    >
+      {content}
+    </Link>
+  );
+}
 
 export function MobileBottomNav() {
   const pathname = usePathname();
   const hydrated = useStoreHydrated();
   const openSheet = useCart((s) => s.openSheet);
-  const savedWishCount = useWishlist((s) => s.ids.length);
-  const wishCount = hydrated ? savedWishCount : 0;
+  const cartOpen = useCart((s) => s.isSheetOpen);
+  const lines = useCart((s) => s.lines);
+
+  const cartCount = useMemo(
+    () => (hydrated ? lines.reduce((n, l) => n + l.quantity, 0) : 0),
+    [hydrated, lines],
+  );
+
+  const badges: Record<string, number> = {
+    cart: cartCount,
+  };
 
   return (
     <nav
-      className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-3xl bg-[#1A1A1A] px-2 py-2 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.35)] md:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden"
       aria-label="Гар утасны доод цэс"
     >
-      {items.map(({ href, label, icon: Icon, mode }) => {
-        const active =
-          mode === "cart"
-            ? pathname === "/checkout" ||
-              pathname.startsWith("/checkout/")
-            : href === "/"
-              ? pathname === "/" || pathname === ""
-              : pathname === href || pathname.startsWith(`${href}/`);
-
-        const className = active
-          ? "relative flex min-w-[4.25rem] flex-col items-center gap-0.5 rounded-2xl bg-white px-3 py-2 text-[#1A1A1A] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.12)] transition-colors"
-          : "relative flex min-w-[4.25rem] flex-col items-center gap-0.5 rounded-2xl px-3 py-2 text-white/55 transition-colors hover:bg-white/10 hover:text-white/90";
-
-        if (mode === "cart") {
-          return (
-            <button
-              key="cart"
-              type="button"
-              onClick={openSheet}
-              className={className}
-            >
-              <Icon
-                className={`size-5 ${active ? "stroke-[2]" : "stroke-[1.5]"}`}
-                aria-hidden
-              />
-              <span
-                className={`text-[10px] font-medium leading-none ${active ? "text-[#1A1A1A]" : "text-white/55"}`}
-              >
-                {label}
-              </span>
-            </button>
-          );
-        }
-
-        return (
-          <Link key={href} href={href} className={className}>
-            <Icon
-              className={`size-5 ${active ? "stroke-[2]" : "stroke-[1.5]"}`}
-              aria-hidden
-            />
-            {href === "/wishlist" && wishCount > 0 ? (
-              <span className="absolute -right-0.5 top-1 flex min-h-[14px] min-w-[14px] items-center justify-center rounded-full bg-white px-0.5 text-[9px] font-bold leading-none text-[#1A1A1A]">
-                {wishCount > 99 ? "99+" : wishCount}
-              </span>
-            ) : null}
-            <span
-              className={`text-[10px] font-medium leading-none ${active ? "text-[#1A1A1A]" : "text-white/55"}`}
-            >
-              {label}
-            </span>
-          </Link>
-        );
-      })}
+      <div
+        className="mx-auto flex max-w-md items-end gap-0.5 overflow-visible rounded-[1.75rem] border border-white/10 bg-[#1A1A1A] px-1.5 pb-1.5 pt-2 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)]"
+      >
+        {items.map((item) => (
+          <NavTab
+            key={item.id}
+            item={item}
+            active={item.isActive(pathname, cartOpen)}
+            badge={badges[item.id]}
+            onCartClick={item.id === "cart" ? openSheet : undefined}
+          />
+        ))}
+      </div>
     </nav>
   );
 }
