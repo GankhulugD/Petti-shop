@@ -124,11 +124,17 @@ export function CartSheet() {
         className="z-[100] flex w-full max-w-md flex-col border-0 bg-background p-0 shadow-xl ring-1 ring-foreground/[0.06]"
         showCloseButton
       >
-        <SheetHeader className="border-b border-foreground/[0.06] px-5 py-4 text-left">
-          <SheetTitle className="text-lg font-semibold">Сагс</SheetTitle>
-        </SheetHeader>
+        <motion.div
+          className="flex min-h-0 flex-1 flex-col"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <SheetHeader className="border-b border-foreground/[0.06] px-5 py-4 text-left">
+            <SheetTitle className="text-lg font-semibold">Сагс</SheetTitle>
+          </SheetHeader>
 
-        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex flex-1 flex-col overflow-hidden">
           {lines.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 6 }}
@@ -205,7 +211,8 @@ export function CartSheet() {
               </div>
             </>
           )}
-        </div>
+          </div>
+        </motion.div>
       </SheetContent>
     </Sheet>
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   Heart,
   Home,
@@ -12,16 +12,16 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { useStoreHydrated } from "@/hooks/use-store-hydrated";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/store/useCart";
+
+const tabSpring = { type: "spring" as const, stiffness: 480, damping: 30 };
 
 type NavItem = {
   id: string;
   label: string;
   icon: LucideIcon;
   href?: string;
-  badge?: number;
   isActive: (pathname: string, cartOpen: boolean) => boolean;
 };
 
@@ -85,38 +85,36 @@ function TabContent({
   active,
   icon: Icon,
   label,
-  badge,
 }: {
   active: boolean;
   icon: LucideIcon;
   label: string;
-  badge?: number;
 }) {
   return (
     <div
       className={cn(
-        "relative flex w-full flex-col items-center justify-center gap-0.5 px-2 py-2.5 transition-colors",
-        active
-          ? "rounded-full bg-white text-[#1A1A1A] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)]"
-          : "rounded-full text-white/55 hover:bg-white/10 hover:text-white/90",
+        "relative flex w-full flex-col items-center justify-center gap-0.5 px-2 py-2.5",
+        active ? "text-[#1A1A1A]" : "text-white/55",
       )}
     >
-      {active ? <CatEars /> : null}
+      {active ? (
+        <motion.div
+          layoutId="mobile-tab-active"
+          className="absolute inset-0 rounded-full bg-white shadow-[0_2px_12px_-4px_rgba(0,0,0,0.15)]"
+          transition={tabSpring}
+        >
+          <CatEars />
+        </motion.div>
+      ) : null}
+
       <Icon
-        className={cn("size-5", active ? "stroke-[2]" : "stroke-[1.5]")}
+        className={cn(
+          "relative z-10 size-5",
+          active ? "stroke-[2]" : "stroke-[1.5]",
+        )}
         aria-hidden
       />
-      {badge != null && badge > 0 ? (
-        <span
-          className={cn(
-            "absolute right-2 top-1.5 flex min-h-[14px] min-w-[14px] items-center justify-center rounded-full px-0.5 text-[9px] font-bold leading-none",
-            active ? "bg-[#1A1A1A] text-white" : "bg-white text-[#1A1A1A]",
-          )}
-        >
-          {badge > 99 ? "99+" : badge}
-        </span>
-      ) : null}
-      <span className="truncate text-[10px] font-medium leading-none">
+      <span className="relative z-10 truncate text-[10px] font-medium leading-none">
         {label}
       </span>
     </div>
@@ -126,66 +124,56 @@ function TabContent({
 function NavTab({
   item,
   active,
-  badge,
   onCartClick,
 }: {
   item: NavItem;
   active: boolean;
-  badge?: number;
   onCartClick?: () => void;
 }) {
   const shellClass =
     "relative mx-0.5 flex min-w-0 flex-1 flex-col items-center justify-end pt-1";
 
   const content = (
-    <TabContent
-      active={active}
-      icon={item.icon}
-      label={item.label}
-      badge={badge}
-    />
+    <TabContent active={active} icon={item.icon} label={item.label} />
   );
+
+  const motionProps = {
+    whileTap: { scale: 0.92, y: 2 },
+    transition: tabSpring,
+  };
 
   if (item.id === "cart" && onCartClick) {
     return (
-      <button
+      <motion.button
         type="button"
         onClick={onCartClick}
         className={shellClass}
         aria-label="Сагс нээх"
         aria-pressed={active}
+        {...motionProps}
       >
         {content}
-      </button>
+      </motion.button>
     );
   }
 
   return (
-    <Link
-      href={item.href!}
-      className={shellClass}
-      aria-current={active ? "page" : undefined}
-    >
-      {content}
-    </Link>
+    <motion.div className={shellClass} {...motionProps}>
+      <Link
+        href={item.href!}
+        className="block w-full"
+        aria-current={active ? "page" : undefined}
+      >
+        {content}
+      </Link>
+    </motion.div>
   );
 }
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const hydrated = useStoreHydrated();
   const openSheet = useCart((s) => s.openSheet);
   const cartOpen = useCart((s) => s.isSheetOpen);
-  const lines = useCart((s) => s.lines);
-
-  const cartCount = useMemo(
-    () => (hydrated ? lines.reduce((n, l) => n + l.quantity, 0) : 0),
-    [hydrated, lines],
-  );
-
-  const badges: Record<string, number> = {
-    cart: cartCount,
-  };
 
   return (
     <nav
@@ -200,7 +188,6 @@ export function MobileBottomNav() {
             key={item.id}
             item={item}
             active={item.isActive(pathname, cartOpen)}
-            badge={badges[item.id]}
             onCartClick={item.id === "cart" ? openSheet : undefined}
           />
         ))}

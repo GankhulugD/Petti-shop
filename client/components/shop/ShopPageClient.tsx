@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { motion } from "framer-motion";
 import { SlidersHorizontal } from "lucide-react";
 
 import { ProductGrid } from "@/components/products/ProductGrid";
@@ -245,23 +246,30 @@ export function ShopPageClient({
                   side="left"
                   className="w-[min(100%,22rem)] border-0 bg-background p-0 sm:max-w-md"
                 >
-                  <SheetHeader className="border-b border-foreground/[0.06] px-4 py-3 text-left">
-                    <SheetTitle>Шүүлтүүр</SheetTitle>
-                  </SheetHeader>
-                  <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto p-4">
-                    <FilterSidebar
-                      brands={brands}
-                      filters={filters}
-                      animalState={animalState}
-                      onAnimalChange={onAnimalChange}
-                      brandState={brandState}
-                      onBrandChange={onBrandChange}
-                      onPriceRangeChange={onPriceRangeChange}
-                      onCategoryChange={onCategoryChange}
-                      priceMin={0}
-                      priceMax={500_000}
-                    />
-                  </div>
+                  <motion.div
+                    className="flex h-full min-h-0 flex-col"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <SheetHeader className="border-b border-foreground/[0.06] px-4 py-3 text-left">
+                      <SheetTitle>Шүүлтүүр</SheetTitle>
+                    </SheetHeader>
+                    <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto p-4">
+                      <FilterSidebar
+                        brands={brands}
+                        filters={filters}
+                        animalState={animalState}
+                        onAnimalChange={onAnimalChange}
+                        brandState={brandState}
+                        onBrandChange={onBrandChange}
+                        onPriceRangeChange={onPriceRangeChange}
+                        onCategoryChange={onCategoryChange}
+                        priceMin={0}
+                        priceMax={500_000}
+                      />
+                    </div>
+                  </motion.div>
                 </SheetContent>
               </Sheet>
 
