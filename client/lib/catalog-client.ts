@@ -7,6 +7,18 @@ type CatalogFilters = { q?: string; cat?: string; limit?: number };
 type CacheEntry = { data: ShopProduct[]; ts: number };
 const memory = new Map<string, CacheEntry>();
 const TTL_MS = 5 * 60_000;
+const cacheListeners = new Set<() => void>();
+
+export function subscribeCatalogCache(onStoreChange: () => void): () => void {
+  cacheListeners.add(onStoreChange);
+  return () => {
+    cacheListeners.delete(onStoreChange);
+  };
+}
+
+function notifyCatalogCacheUpdate(): void {
+  cacheListeners.forEach((listener) => listener());
+}
 
 type ApiProduct = {
   id: string;
@@ -123,6 +135,7 @@ export async function fetchCatalogCached(
     } catch {
       /* quota */
     }
+    notifyCatalogCacheUpdate();
   }
   return data;
 }

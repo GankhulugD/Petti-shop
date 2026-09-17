@@ -5,20 +5,16 @@ import { useEffect, useState } from "react";
 
 import { ProductGrid } from "@/components/products/ProductGrid";
 import { ProductGridSkeleton } from "@/components/ui/page-skeletons";
-import {
-  fetchCatalogCached,
-  readCatalogCache,
-} from "@/lib/catalog-client";
+import { useCatalogCache } from "@/hooks/use-catalog-cache";
+import { fetchCatalogCached } from "@/lib/catalog-client";
 import type { ShopProduct } from "@/lib/shop-products";
 
 export function FlashSaleSection() {
+  const cached = useCatalogCache({ limit: 8 });
   const [products, setProducts] = useState<ShopProduct[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    const cached = readCatalogCache({ limit: 8 });
-    if (cached?.length) setProducts(cached);
-
     fetchCatalogCached({ limit: 8 })
       .then((data) => {
         if (!cancelled) setProducts(data);
@@ -30,6 +26,8 @@ export function FlashSaleSection() {
       cancelled = true;
     };
   }, []);
+
+  const display = products ?? cached;
 
   return (
     <section aria-labelledby="flash-sale-heading">
@@ -43,20 +41,20 @@ export function FlashSaleSection() {
         <p className="text-sm text-foreground/50">Онцлох бүтээгдэхүүн</p>
       </div>
 
-      {products === null ? (
+      {display === null ? (
         <ProductGridSkeleton count={8} />
-      ) : products.length === 0 ? (
+      ) : display.length === 0 ? (
         <div className="rounded-2xl bg-muted/30 px-6 py-12 text-center text-sm text-muted-foreground">
           <p>Одоогоор бараа байхгүй байна.</p>
         </div>
       ) : (
         <ProductGrid
-          products={products}
+          products={display}
           className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4"
         />
       )}
 
-      {products && products.length > 0 ? (
+      {display && display.length > 0 ? (
         <div className="mt-6 text-center">
           <Link
             href="/shop"

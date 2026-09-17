@@ -4,21 +4,17 @@ import { useEffect, useState } from "react";
 
 import { ShopPageClient } from "@/components/shop/ShopPageClient";
 import { ProductGridSkeleton } from "@/components/ui/page-skeletons";
-import {
-  fetchCatalogCached,
-  readCatalogCache,
-} from "@/lib/catalog-client";
+import { useCatalogCache } from "@/hooks/use-catalog-cache";
+import { fetchCatalogCached } from "@/lib/catalog-client";
 import type { ShopProduct } from "@/lib/shop-products";
 
 export function ShopPageView() {
+  const cached = useCatalogCache();
   const [products, setProducts] = useState<ShopProduct[] | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    const cached = readCatalogCache();
-    if (cached?.length) setProducts(cached);
-
     fetchCatalogCached()
       .then((data) => {
         if (!cancelled) {
@@ -34,7 +30,9 @@ export function ShopPageView() {
     };
   }, []);
 
-  if (products === null && !error) {
+  const display = products ?? cached;
+
+  if (display === null && !error) {
     return (
       <ShopPageClient products={[]} loading>
         <ProductGridSkeleton count={8} />
@@ -42,7 +40,7 @@ export function ShopPageView() {
     );
   }
 
-  if (error || products === null) {
+  if (error && display === null) {
     return (
       <ShopPageClient products={[]} loading={false}>
         <p className="py-12 text-center text-sm text-muted-foreground">
@@ -53,7 +51,7 @@ export function ShopPageView() {
   }
 
   return (
-    <ShopPageClient products={products} loading={false}>
+    <ShopPageClient products={display ?? []} loading={false}>
       {null}
     </ShopPageClient>
   );

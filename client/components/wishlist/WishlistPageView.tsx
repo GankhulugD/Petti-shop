@@ -4,20 +4,16 @@ import { useEffect, useState } from "react";
 
 import { WishlistPageClient } from "@/components/wishlist/WishlistPageClient";
 import { ProductGridSkeleton } from "@/components/ui/page-skeletons";
-import {
-  fetchCatalogCached,
-  readCatalogCache,
-} from "@/lib/catalog-client";
+import { useCatalogCache } from "@/hooks/use-catalog-cache";
+import { fetchCatalogCached } from "@/lib/catalog-client";
 import type { ShopProduct } from "@/lib/shop-products";
 
 export function WishlistPageView() {
+  const cached = useCatalogCache();
   const [catalog, setCatalog] = useState<ShopProduct[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    const cached = readCatalogCache();
-    if (cached?.length) setCatalog(cached);
-
     fetchCatalogCached()
       .then((data) => {
         if (!cancelled) setCatalog(data);
@@ -30,7 +26,9 @@ export function WishlistPageView() {
     };
   }, []);
 
-  if (catalog === null) {
+  const display = catalog ?? cached;
+
+  if (display === null) {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-10 md:py-10">
         <h1 className="text-2xl font-semibold tracking-tight">Дуртай</h1>
@@ -41,5 +39,5 @@ export function WishlistPageView() {
     );
   }
 
-  return <WishlistPageClient catalog={catalog} />;
+  return <WishlistPageClient catalog={display} />;
 }
