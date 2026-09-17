@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Accordion,
@@ -45,6 +45,54 @@ export type FilterSidebarProps = {
   priceMax: number;
 };
 
+function PriceRangeFilter({
+  filters,
+  priceMin,
+  priceMax,
+  onPriceRangeChange,
+}: {
+  filters: ShopUrlFilters;
+  priceMin: number;
+  priceMax: number;
+  onPriceRangeChange: (range: [number, number]) => void;
+}) {
+  const [draftRange, setDraftRange] = useState<[number, number]>([
+    filters.priceMin,
+    filters.priceMax,
+  ]);
+
+  return (
+    <div className="space-y-4 pt-1">
+      <p className="text-xs tabular-nums text-muted-foreground">
+        {formatMnt(draftRange[0])} — {formatMnt(draftRange[1])}
+      </p>
+      <Slider
+        min={priceMin}
+        max={priceMax}
+        step={5000}
+        value={draftRange}
+        onValueChange={(v) => {
+          if (v.length >= 2) {
+            setDraftRange([v[0]!, v[1]!]);
+          }
+        }}
+        onValueCommit={(v) => {
+          if (v.length < 2) return;
+          const next: [number, number] = [v[0]!, v[1]!];
+          if (
+            next[0] === filters.priceMin &&
+            next[1] === filters.priceMax
+          ) {
+            return;
+          }
+          onPriceRangeChange(next);
+        }}
+        className="py-1"
+      />
+    </div>
+  );
+}
+
 export function FilterSidebar({
   brands,
   filters,
@@ -58,14 +106,6 @@ export function FilterSidebar({
   priceMax,
 }: FilterSidebarProps) {
   const urlQ = filters.q;
-  const [draftRange, setDraftRange] = useState<[number, number]>([
-    filters.priceMin,
-    filters.priceMax,
-  ]);
-
-  useEffect(() => {
-    setDraftRange([filters.priceMin, filters.priceMax]);
-  }, [filters.priceMin, filters.priceMax]);
 
   return (
     <motion.aside
@@ -197,34 +237,13 @@ export function FilterSidebar({
               Үнэ
             </AccordionTrigger>
             <AccordionContent className="pb-3">
-              <div className="space-y-4 pt-1">
-                <p className="text-xs tabular-nums text-muted-foreground">
-                  {formatMnt(draftRange[0])} — {formatMnt(draftRange[1])}
-                </p>
-                <Slider
-                  min={priceMin}
-                  max={priceMax}
-                  step={5000}
-                  value={draftRange}
-                  onValueChange={(v) => {
-                    if (v.length >= 2) {
-                      setDraftRange([v[0]!, v[1]!]);
-                    }
-                  }}
-                  onValueCommit={(v) => {
-                    if (v.length < 2) return;
-                    const next: [number, number] = [v[0]!, v[1]!];
-                    if (
-                      next[0] === filters.priceMin &&
-                      next[1] === filters.priceMax
-                    ) {
-                      return;
-                    }
-                    onPriceRangeChange(next);
-                  }}
-                  className="py-1"
-                />
-              </div>
+              <PriceRangeFilter
+                key={`${filters.priceMin}-${filters.priceMax}`}
+                filters={filters}
+                priceMin={priceMin}
+                priceMax={priceMax}
+                onPriceRangeChange={onPriceRangeChange}
+              />
             </AccordionContent>
           </AccordionItem>
         </Accordion>

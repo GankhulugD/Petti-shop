@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { Heart, ShoppingBag, UserRound } from "lucide-react";
 
-import { HeaderSearch } from "@/components/layout/HeaderSearch";
+import {
+  HeaderSearch,
+  HeaderSearchFallback,
+} from "@/components/layout/HeaderSearch";
 import { useStoreHydrated } from "@/hooks/use-store-hydrated";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/store/useCart";
@@ -80,7 +83,9 @@ export function Header() {
           })}
         </nav>
 
-        <HeaderSearch />
+        <Suspense fallback={<HeaderSearchFallback />}>
+          <HeaderSearch />
+        </Suspense>
 
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <Link

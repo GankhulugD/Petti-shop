@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 
 function SearchInputs({
@@ -72,15 +72,15 @@ function readShopQuery(): string {
   return new URLSearchParams(window.location.search).get("q") ?? "";
 }
 
-export function HeaderSearch() {
+function HeaderSearchField({
+  onShop,
+  initialQ,
+}: {
+  onShop: boolean;
+  initialQ: string;
+}) {
   const router = useRouter();
-  const pathname = usePathname();
-  const onShop = pathname === "/shop";
-  const [value, setValue] = useState("");
-
-  useEffect(() => {
-    setValue(onShop ? readShopQuery() : "");
-  }, [onShop, pathname]);
+  const [value, setValue] = useState(initialQ);
 
   const submit = useCallback(() => {
     const q = value.trim();
@@ -102,5 +102,39 @@ export function HeaderSearch() {
 
   return (
     <SearchInputs value={value} onChange={setValue} onSubmit={submit} />
+  );
+}
+
+export function HeaderSearchFallback() {
+  return <SearchInputs value="" onChange={() => {}} onSubmit={() => {}} />;
+}
+
+export function HeaderSearch() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const onShop = pathname === "/shop";
+  const [urlSync, setUrlSync] = useState(0);
+
+  useEffect(() => {
+    const onUrl = () => setUrlSync((n) => n + 1);
+    window.addEventListener("petti:shop-url", onUrl);
+    return () => window.removeEventListener("petti:shop-url", onUrl);
+  }, []);
+
+  const initialQ = onShop
+    ? urlSync > 0
+      ? readShopQuery()
+      : (searchParams.get("q") ?? "")
+    : "";
+  const remountKey = onShop
+    ? `${pathname}-${searchParams.toString()}-${urlSync}`
+    : pathname;
+
+  return (
+    <HeaderSearchField
+      key={remountKey}
+      onShop={onShop}
+      initialQ={initialQ}
+    />
   );
 }
