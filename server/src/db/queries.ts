@@ -10,8 +10,8 @@ import {
 } from "./schema";
 import {
   serializeOrder,
+  serializeProductCard,
   serializeProductDetail,
-  serializeProductList,
 } from "@/lib/serialize";
 
 export async function loadProductGraph(db: Database, productId: string) {
@@ -52,12 +52,16 @@ export async function loadProductBySlug(db: Database, slug: string) {
 
 export async function listActiveProducts(
   db: Database,
-  filters?: { q?: string; categorySlug?: string },
+  filters?: { q?: string; categorySlug?: string; limit?: number },
 ) {
   const q = filters?.q?.trim().toLowerCase();
   const categorySlug = filters?.categorySlug?.trim();
+  const limit =
+    filters?.limit != null
+      ? Math.max(1, Math.min(100, Math.floor(filters.limit)))
+      : undefined;
 
-  const rows = await db
+  const base = db
     .select({
       product: products,
       categorySlug: categories.slug,
@@ -79,19 +83,11 @@ export async function listActiveProducts(
     )
     .orderBy(desc(products.updatedAt));
 
-  const result = [];
-  for (const row of rows) {
-    const graph = await loadProductGraph(db, row.product.id);
-    if (!graph) continue;
-    result.push(
-      serializeProductList(
-        graph.product,
-        graph.variants,
-        row.categorySlug,
-      ),
-    );
-  }
-  return result;
+  const rows = limit ? await base.limit(limit) : await base;
+
+  return rows.map((row) =>
+    serializeProductCard(row.product, row.categorySlug),
+  );
 }
 
 export async function getDashboardStats(db: Database) {

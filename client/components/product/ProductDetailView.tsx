@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Minus, Plus, ShoppingBag, Star } from "lucide-react";
 
 import {
@@ -19,6 +19,31 @@ import { useCart } from "@/store/useCart";
 type Props = {
   product: ShopProduct;
 };
+
+function MainProductImage({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className="relative aspect-square overflow-hidden rounded-3xl bg-[#f3f3f3] shadow-sm ring-1 ring-foreground/[0.05]">
+      {!loaded ? (
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-[#f0f0f0] to-[#e8e8e8]"
+          aria-hidden
+        />
+      ) : null}
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        priority
+        sizes="(max-width: 1024px) 100vw, 50vw"
+        className={`object-cover transition-opacity duration-300 ${
+          loaded ? "opacity-100" : "opacity-0"
+        }`}
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  );
+}
 
 export function ProductDetailView({ product }: Props) {
   const addItem = useCart((s) => s.addItem);
@@ -38,38 +63,10 @@ export function ProductDetailView({ product }: Props) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-10 md:py-10">
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col gap-10 lg:gap-12"
-      >
+      <div className="flex flex-col gap-10 lg:gap-12">
         <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
           <div className="space-y-4">
-            <motion.div
-              className="relative aspect-square overflow-hidden rounded-3xl bg-muted/30 shadow-sm ring-1 ring-foreground/[0.05]"
-              layout
-            >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={mainSrc}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="absolute inset-0"
-                >
-                  <Image
-                    src={mainSrc}
-                    alt={product.imageAlt}
-                    fill
-                    priority
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    className="object-cover"
-                  />
-                </motion.div>
-              </AnimatePresence>
-            </motion.div>
+            <MainProductImage key={mainSrc} src={mainSrc} alt={product.imageAlt} />
 
             <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar sm:gap-3">
               {product.images.map((src, i) => (
@@ -277,7 +274,7 @@ export function ProductDetailView({ product }: Props) {
             </AccordionItem>
           </Accordion>
         </motion.section>
-      </motion.div>
+      </div>
     </div>
   );
 }

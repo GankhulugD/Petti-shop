@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ProductDetailView } from "@/components/product/ProductDetailView";
 import { fetchProductBySlug } from "@/lib/api";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export async function generateMetadata({
   params,

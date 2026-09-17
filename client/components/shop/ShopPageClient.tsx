@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { SlidersHorizontal } from "lucide-react";
 
-import { ProductCard } from "@/components/products/ProductCard";
+import { ProductGrid } from "@/components/products/ProductGrid";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -105,9 +104,15 @@ function writeShopPath(path: string) {
 
 type ShopPageClientProps = {
   products: ShopProduct[];
+  loading?: boolean;
+  children?: ReactNode;
 };
 
-export function ShopPageClient({ products }: ShopPageClientProps) {
+export function ShopPageClient({
+  products,
+  loading = false,
+  children,
+}: ShopPageClientProps) {
   const brands = useMemo(
     () => [...new Set(products.map((p) => p.brand).filter(Boolean))].sort(),
     [products],
@@ -194,12 +199,7 @@ export function ShopPageClient({ products }: ShopPageClientProps) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-10 md:py-10">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="flex flex-col gap-8 md:flex-row md:items-start"
-      >
+      <div className="flex flex-col gap-8 md:flex-row md:items-start">
         <aside className="hidden shrink-0 md:block md:w-[17.5rem] lg:w-72">
           <div className="md:sticky md:top-24">
             <FilterSidebar
@@ -224,7 +224,7 @@ export function ShopPageClient({ products }: ShopPageClientProps) {
                 Бүх бараа
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {filtered.length} бүтээгдэхүүн
+                {loading ? "…" : `${filtered.length} бүтээгдэхүүн`}
               </p>
             </div>
 
@@ -248,12 +248,7 @@ export function ShopPageClient({ products }: ShopPageClientProps) {
                   <SheetHeader className="border-b border-foreground/[0.06] px-4 py-3 text-left">
                     <SheetTitle>Шүүлтүүр</SheetTitle>
                   </SheetHeader>
-                  <motion.div
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="max-h-[calc(100dvh-5rem)] overflow-y-auto p-4"
-                  >
+                  <div className="max-h-[calc(100dvh-5rem)] overflow-y-auto p-4">
                     <FilterSidebar
                       brands={brands}
                       filters={filters}
@@ -266,7 +261,7 @@ export function ShopPageClient({ products }: ShopPageClientProps) {
                       priceMin={0}
                       priceMax={500_000}
                     />
-                  </motion.div>
+                  </div>
                 </SheetContent>
               </Sheet>
 
@@ -292,43 +287,27 @@ export function ShopPageClient({ products }: ShopPageClientProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {filtered.map((p) => (
-              <ProductCard
-                key={p.id}
-                productId={p.id}
-                name={p.name}
-                price={p.priceLabel}
-                rating={p.rating}
-                imageSrc={p.imageSrc}
-                imageAlt={p.imageAlt}
-                href={`/product/${p.slug}`}
-                badge={p.badge}
-                brand={p.brand}
-              />
-            ))}
-          </div>
+          {loading && children ? (
+            children
+          ) : (
+            <ProductGrid
+              products={filtered}
+              className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+            />
+          )}
 
-          {products.length === 0 ? (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="py-12 text-center text-sm text-muted-foreground"
-            >
+          {!loading && products.length === 0 ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">
               Бараа олдсонгүй. Сервер асаасан эсэхээ шалгана уу (
               <code className="text-xs">server → npm run dev</code>).
-            </motion.p>
-          ) : filtered.length === 0 ? (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="py-12 text-center text-sm text-muted-foreground"
-            >
+            </p>
+          ) : !loading && filtered.length === 0 ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">
               Шүүлтүүрт тохирох бараа олдсонгүй. Шүүлтүүрийг өөрчилж үзнэ үү.
-            </motion.p>
+            </p>
           ) : null}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

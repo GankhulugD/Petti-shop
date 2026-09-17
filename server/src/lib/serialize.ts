@@ -59,6 +59,29 @@ export function serializeVariant(row: InferSelectModel<typeof productVariants>) 
   };
 }
 
+/** Каталогийн карт — variants/details байхгүй, хурдан list endpoint */
+export function serializeProductCard(
+  row: InferSelectModel<typeof products>,
+  categorySlug?: string | null,
+) {
+  const urls = productImages(row);
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    brand: row.brand,
+    priceMnt: row.priceMnt,
+    priceLabel: `₮ ${row.priceMnt.toLocaleString("mn-MN")}`,
+    rating: ratingFromTenths(row.ratingTenths),
+    badge: row.badge,
+    animals: row.targetAnimals ?? [],
+    categorySlug: categorySlug ?? null,
+    imageSrc: urls[0] ?? "",
+    imageAlt: row.imageAlt ?? row.name,
+    images: urls.length ? [urls[0]] : [],
+  };
+}
+
 export function serializeProductList(
   row: InferSelectModel<typeof products>,
   variants: InferSelectModel<typeof productVariants>[],

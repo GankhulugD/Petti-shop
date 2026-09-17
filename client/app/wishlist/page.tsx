@@ -1,9 +1,5 @@
-import { WishlistPageClient } from "@/components/wishlist/WishlistPageClient";
-import { fetchCatalogProducts } from "@/lib/api";
+import { WishlistPageView } from "@/components/wishlist/WishlistPageView";
 
-export const dynamic = "force-dynamic";
-
-export default async function WishlistPage() {
-  const catalog = await fetchCatalogProducts();
-  return <WishlistPageClient catalog={catalog} />;
+export default function WishlistPage() {
+  return <WishlistPageView />;
 }

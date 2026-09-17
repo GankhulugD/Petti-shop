@@ -26,13 +26,18 @@ import {
 
 type AppEnv = { Bindings: WorkerEnv };
 
+const PUBLIC_CACHE = "public, s-maxage=60, stale-while-revalidate=120";
+
 const app = new Hono<AppEnv>();
 
 app.use("*", async (c, next) => apiCorsMiddleware(c.env)(c, next));
 
 app.get("/", (c) => c.json({ service: "petti-api", version: "3" }));
 
-app.get("/api/shop", (c) => c.json(serializeStoreConfig()));
+app.get("/api/shop", (c) => {
+  c.header("Cache-Control", PUBLIC_CACHE);
+  return c.json(serializeStoreConfig());
+});
 
 app.get("/api/categories", async (c) => {
   const db = createDb(c.env.DB);
@@ -41,6 +46,7 @@ app.get("/api/categories", async (c) => {
     .from(categories)
     .where(eq(categories.isActive, true))
     .orderBy(categories.sortOrder);
+  c.header("Cache-Control", PUBLIC_CACHE);
   return c.json(rows.map(serializeCategory));
 });
 
@@ -48,13 +54,23 @@ app.get("/api/products", async (c) => {
   const db = createDb(c.env.DB);
   const q = c.req.query("q") ?? undefined;
   const categorySlug = c.req.query("cat") ?? c.req.query("category") ?? undefined;
-  return c.json({ items: await listActiveProducts(db, { q, categorySlug }) });
+  const limitRaw = c.req.query("limit");
+  const limit = limitRaw ? Number(limitRaw) : undefined;
+  c.header("Cache-Control", PUBLIC_CACHE);
+  return c.json({
+    items: await listActiveProducts(db, {
+      q,
+      categorySlug,
+      limit: Number.isFinite(limit) ? limit : undefined,
+    }),
+  });
 });
 
 app.get("/api/products/:slug", async (c) => {
   const db = createDb(c.env.DB);
   const graph = await loadProductBySlug(db, c.req.param("slug"));
   if (!graph) return jsonError(c, "product not found", 404);
+  c.header("Cache-Control", PUBLIC_CACHE);
   return c.json(
     serializeProductDetail(graph.product, graph.variants, graph.category),
   );

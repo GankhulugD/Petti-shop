@@ -1,7 +1,10 @@
+import { cache } from "react";
+
 import type { AnimalKind, ShopCategory, ShopProduct } from "@/lib/shop-products";
 import { SHOP_CATEGORIES, formatMnt } from "@/lib/shop-products";
 
 const DEFAULT_API_URL = "http://localhost:8787";
+const CATALOG_REVALIDATE_SEC = 60;
 
 export type StoreConfig = {
   name: string;
@@ -160,16 +163,25 @@ function mapApiProduct(raw: ApiProduct): ShopProduct {
   };
 }
 
-async function fetchJson<T>(path: string, init?: RequestInit): Promise<T | null> {
+async function fetchJson<T>(
+  path: string,
+  init?: RequestInit & { revalidate?: number | false },
+): Promise<T | null> {
   const url = `${getApiBaseUrl()}${path}`;
+  const { revalidate, ...rest } = init ?? {};
+  const cacheMode =
+    revalidate === false
+      ? { cache: "no-store" as const }
+      : { next: { revalidate: revalidate ?? CATALOG_REVALIDATE_SEC } };
+
   try {
     const res = await fetch(url, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(15_000),
-      ...init,
+      ...cacheMode,
+      signal: AbortSignal.timeout(10_000),
+      ...rest,
       headers: {
         "Content-Type": "application/json",
-        ...init?.headers,
+        ...rest.headers,
       },
     });
     if (!res.ok) return null;
@@ -179,43 +191,49 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T | null>
   }
 }
 
-export async function fetchShopConfig(): Promise<StoreConfig | null> {
+export const fetchShopConfig = cache(async (): Promise<StoreConfig | null> => {
   return fetchJson<StoreConfig>("/api/shop");
-}
+});
 
 export async function lookupOrder(
   orderNumber: string,
   email: string,
 ): Promise<LookedUpOrder | null> {
   const params = new URLSearchParams({ orderNumber, email });
-  return fetchJson<LookedUpOrder>(`/api/orders/lookup?${params.toString()}`);
+  return fetchJson<LookedUpOrder>(`/api/orders/lookup?${params.toString()}`, {
+    revalidate: false,
+  });
 }
 
-export async function fetchCatalogProducts(filters?: {
-  q?: string;
-  cat?: string;
-}): Promise<ShopProduct[]> {
-  const params = new URLSearchParams();
-  if (filters?.q) params.set("q", filters.q);
-  if (filters?.cat) params.set("cat", filters.cat);
-  const qs = params.toString();
-  const data = await fetchJson<{ items?: ApiProduct[] } | ApiProduct[]>(
-    qs ? `/api/products?${qs}` : "/api/products",
-  );
-  if (!data) return [];
-  const list = Array.isArray(data) ? data : (data.items ?? []);
-  return list.map(mapApiProduct);
-}
+export const fetchCatalogProducts = cache(
+  async (filters?: {
+    q?: string;
+    cat?: string;
+    limit?: number;
+  }): Promise<ShopProduct[]> => {
+    const params = new URLSearchParams();
+    if (filters?.q) params.set("q", filters.q);
+    if (filters?.cat) params.set("cat", filters.cat);
+    if (filters?.limit) params.set("limit", String(filters.limit));
+    const qs = params.toString();
+    const data = await fetchJson<{ items?: ApiProduct[] } | ApiProduct[]>(
+      qs ? `/api/products?${qs}` : "/api/products",
+    );
+    if (!data) return [];
+    const list = Array.isArray(data) ? data : (data.items ?? []);
+    return list.map(mapApiProduct);
+  },
+);
 
-export async function fetchProductBySlug(
-  slug: string,
-): Promise<ShopProduct | null> {
-  const data = await fetchJson<ApiProduct>(
-    `/api/products/${encodeURIComponent(slug)}`,
-  );
-  if (!data) return null;
-  return mapApiProduct(data);
-}
+export const fetchProductBySlug = cache(
+  async (slug: string): Promise<ShopProduct | null> => {
+    const data = await fetchJson<ApiProduct>(
+      `/api/products/${encodeURIComponent(slug)}`,
+    );
+    if (!data) return null;
+    return mapApiProduct(data);
+  },
+);
 
 export async function createOrder(
   input: CreateOrderInput,

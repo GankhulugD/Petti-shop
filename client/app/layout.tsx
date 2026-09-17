@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { CartSheet } from "@/components/cart/CartSheet";
+import { CartSheetLazy } from "@/components/layout/CartSheetLazy";
 import { Header } from "@/components/layout/Header";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -77,7 +77,7 @@ export default function RootLayout({
         <main className="flex flex-1 flex-col pb-24 md:pb-10">{children}</main>
         <SiteFooter />
         <MobileBottomNav />
-        <CartSheet />
+        <CartSheetLazy />
       </body>
     </html>
   );

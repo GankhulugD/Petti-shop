@@ -1,6 +1,6 @@
 import { fetchShopConfig } from "@/lib/api";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 export const metadata = { title: "Холбоо барих" };
 
 export default async function ContactPage() {

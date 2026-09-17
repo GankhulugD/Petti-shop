@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { motion } from "framer-motion";
 
-import { ProductCard } from "@/components/products/ProductCard";
+import { ProductGrid } from "@/components/products/ProductGrid";
 import { Button } from "@/components/ui/button";
 import { useStoreHydrated } from "@/hooks/use-store-hydrated";
 import { getShopProductsByIds } from "@/lib/api";
@@ -21,12 +20,7 @@ export function WishlistPageClient({ catalog }: { catalog: ShopProduct[] }) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-10 md:py-10">
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="space-y-8"
-      >
+      <div className="space-y-8">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Дуртай
@@ -37,7 +31,7 @@ export function WishlistPageClient({ catalog }: { catalog: ShopProduct[] }) {
         </div>
 
         {products.length === 0 ? (
-          <div className="rounded-3xl bg-muted/40 px-8 py-16 text-center ring-1 ring-foreground/[0.05]">
+          <div className="rounded-3xl bg-muted/30 px-8 py-16 text-center ring-1 ring-foreground/[0.05]">
             <p className="text-sm font-medium text-foreground/80">
               Дуртай жагсаалт хоосон байна
             </p>
@@ -49,24 +43,9 @@ export function WishlistPageClient({ catalog }: { catalog: ShopProduct[] }) {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {products.map((p) => (
-              <ProductCard
-                key={p.id}
-                productId={p.id}
-                name={p.name}
-                price={p.priceLabel}
-                rating={p.rating}
-                imageSrc={p.imageSrc}
-                imageAlt={p.imageAlt}
-                href={`/product/${p.slug}`}
-                badge={p.badge}
-                brand={p.brand}
-              />
-            ))}
-          </div>
+          <ProductGrid products={products} />
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }
