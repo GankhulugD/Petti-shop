@@ -39,8 +39,10 @@ printf '%s' 'https://YOUR-CLIENT.vercel.app,https://YOUR-ADMIN.vercel.app,http:/
 
 ## 2. Client (Vercel)
 
+> **Улаан X GitHub дээр:** ихэнхдээ Vercel check — CI биш. Repo **root**-оос build хийх гэж оролдвол `No Next.js version detected` алдаа гарна. **Root Directory заавал `client`.**
+
 1. [vercel.com](https://vercel.com) → **New Project** → repo сонгох
-2. **Root Directory:** `client`
+2. **Root Directory:** `client` ← **заавал** (Edit → client сонгох)
 3. Framework: Next.js (автоматаар)
 
 | Env | Утга |
@@ -56,8 +58,8 @@ cd client && npm run build   # local шалгалт
 
 ## 3. Admin (Vercel)
 
-1. **Тусдаа** Vercel project (client-ээс өөр)
-2. **Root Directory:** `admin`
+1. **Тусдаа** Vercel project (client-ээс өөр — нэг repo, хоёр project)
+2. **Root Directory:** `admin` ← **заавал**
 
 | Env | Утга |
 |-----|------|
