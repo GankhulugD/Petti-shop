@@ -15,8 +15,10 @@
     "start": "npm run start --prefix client",
     "db:setup": "npm run db:setup:local --prefix server"
   },
-  "devDependencies": {
-    "concurrently": "^9.1.2",
+  "dependencies": {
     "next": "16.2.6"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
   }
 }
