@@ -91,12 +91,21 @@ function readCacheEntry(key: string): ShopProduct[] | null {
   }
 }
 
+/** useSyncExternalStore-д тогтвортой reference буцаахын тулд memory-д хадгална. */
+function storeCacheEntry(key: string, data: ShopProduct[]): ShopProduct[] {
+  memory.set(key, { data, ts: Date.now() });
+  return data;
+}
+
 export function readCatalogCache(filters?: CatalogFilters): ShopProduct[] | null {
-  const direct = readCacheEntry(cacheKey(filters));
+  const key = cacheKey(filters);
+  const direct = readCacheEntry(key);
   if (direct) return direct;
   if (filters?.limit) {
     const full = readCacheEntry(cacheKey());
-    if (full?.length) return full.slice(0, filters.limit);
+    if (full?.length) {
+      return storeCacheEntry(key, full.slice(0, filters.limit));
+    }
   }
   return null;
 }
