@@ -1,4 +1,4 @@
-import { and, count, desc, eq, like, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, like, or, sql } from "drizzle-orm";
 
 import { createDb, type Database } from "./client";
 import {
@@ -48,6 +48,119 @@ export async function loadProductBySlug(db: Database, slug: string) {
     .get();
   if (!product) return null;
   return loadProductGraph(db, product.id);
+}
+
+export type ProductGraph = NonNullable<Awaited<ReturnType<typeof loadProductGraph>>>;
+
+export async function loadProductGraphs(
+  db: Database,
+  productIds: string[],
+): Promise<Map<string, ProductGraph>> {
+  const unique = [...new Set(productIds.filter(Boolean))];
+  const result = new Map<string, ProductGraph>();
+  if (!unique.length) return result;
+
+  const productRows = await db
+    .select()
+    .from(products)
+    .where(inArray(products.id, unique));
+  if (!productRows.length) return result;
+
+  const variantRows = await db
+    .select()
+    .from(productVariants)
+    .where(inArray(productVariants.productId, unique));
+
+  const categoryIds = [
+    ...new Set(
+      productRows
+        .map((p) => p.categoryId)
+        .filter((id): id is string => !!id),
+    ),
+  ];
+  const categoryRows = categoryIds.length
+    ? await db
+        .select()
+        .from(categories)
+        .where(inArray(categories.id, categoryIds))
+    : [];
+  const categoryById = new Map(categoryRows.map((c) => [c.id, c]));
+
+  const variantsByProduct = new Map<string, (typeof variantRows)[number][]>();
+  for (const variant of variantRows) {
+    const list = variantsByProduct.get(variant.productId) ?? [];
+    list.push(variant);
+    variantsByProduct.set(variant.productId, list);
+  }
+
+  for (const product of productRows) {
+    result.set(product.id, {
+      product,
+      variants: variantsByProduct.get(product.id) ?? [],
+      category: product.categoryId
+        ? (categoryById.get(product.categoryId) ?? null)
+        : null,
+    });
+  }
+
+  return result;
+}
+
+export async function listProductsByIds(db: Database, ids: string[]) {
+  const unique = [...new Set(ids.filter(Boolean))].slice(0, 50);
+  if (!unique.length) return [];
+
+  const rows = await db
+    .select({
+      product: products,
+      categorySlug: categories.slug,
+    })
+    .from(products)
+    .leftJoin(categories, eq(products.categoryId, categories.id))
+    .where(
+      and(eq(products.status, "active"), inArray(products.id, unique)),
+    )
+    .orderBy(desc(products.updatedAt));
+
+  return rows.map((row) =>
+    serializeProductCard(row.product, row.categorySlug),
+  );
+}
+
+export async function listAdminProductDetails(db: Database) {
+  const rows = await db
+    .select({
+      product: products,
+      categoryName: categories.name,
+      category: categories,
+    })
+    .from(products)
+    .leftJoin(categories, eq(products.categoryId, categories.id))
+    .orderBy(desc(products.updatedAt));
+
+  if (!rows.length) return [];
+
+  const productIds = rows.map((row) => row.product.id);
+  const variantRows = await db
+    .select()
+    .from(productVariants)
+    .where(inArray(productVariants.productId, productIds));
+
+  const variantsByProduct = new Map<string, (typeof variantRows)[number][]>();
+  for (const variant of variantRows) {
+    const list = variantsByProduct.get(variant.productId) ?? [];
+    list.push(variant);
+    variantsByProduct.set(variant.productId, list);
+  }
+
+  return rows.map((row) => ({
+    ...serializeProductDetail(
+      row.product,
+      variantsByProduct.get(row.product.id) ?? [],
+      row.category,
+    ),
+    categoryName: row.categoryName,
+  }));
 }
 
 export async function listActiveProducts(
@@ -121,15 +234,23 @@ export async function listOrdersAdmin(db: Database) {
     .from(orders)
     .orderBy(desc(orders.createdAt));
 
-  const result = [];
-  for (const row of rows) {
-    const items = await db
-      .select()
-      .from(orderItems)
-      .where(eq(orderItems.orderId, row.id));
-    result.push(serializeOrder(row, items));
+  if (!rows.length) return [];
+
+  const allItems = await db
+    .select()
+    .from(orderItems)
+    .where(inArray(orderItems.orderId, rows.map((row) => row.id)));
+
+  const itemsByOrder = new Map<string, (typeof allItems)[number][]>();
+  for (const item of allItems) {
+    const list = itemsByOrder.get(item.orderId) ?? [];
+    list.push(item);
+    itemsByOrder.set(item.orderId, list);
   }
-  return result;
+
+  return rows.map((row) =>
+    serializeOrder(row, itemsByOrder.get(row.id) ?? []),
+  );
 }
 
 export { createDb };

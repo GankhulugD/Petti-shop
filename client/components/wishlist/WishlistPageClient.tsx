@@ -1,23 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
 
 import { ProductGrid } from "@/components/products/ProductGrid";
 import { Button } from "@/components/ui/button";
-import { useStoreHydrated } from "@/hooks/use-store-hydrated";
-import { getShopProductsByIds } from "@/lib/api";
 import type { ShopProduct } from "@/lib/shop-products";
-import { useWishlist } from "@/store/useWishlist";
 
-export function WishlistPageClient({ catalog }: { catalog: ShopProduct[] }) {
-  const hydrated = useStoreHydrated();
-  const ids = useWishlist((s) => s.ids);
-  const products = useMemo(
-    () => (hydrated ? getShopProductsByIds(catalog, ids) : []),
-    [hydrated, catalog, ids],
-  );
-
+export function WishlistPageClient({ products }: { products: ShopProduct[] }) {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-10 md:py-10">
       <div className="space-y-8">

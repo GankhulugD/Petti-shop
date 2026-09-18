@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   createOrder,
-  fetchShopConfig,
+  fetchShopConfigClient,
   shippingForSubtotal,
   type StoreConfig,
 } from "@/lib/api";
@@ -40,7 +40,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchShopConfig().then(setStore);
+    void fetchShopConfigClient().then(setStore);
   }, []);
 
   const subtotal = useMemo(

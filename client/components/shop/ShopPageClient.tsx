@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { SlidersHorizontal } from "lucide-react";
 
@@ -105,15 +105,9 @@ function writeShopPath(path: string) {
 
 type ShopPageClientProps = {
   products: ShopProduct[];
-  loading?: boolean;
-  children?: ReactNode;
 };
 
-export function ShopPageClient({
-  products,
-  loading = false,
-  children,
-}: ShopPageClientProps) {
+export function ShopPageClient({ products }: ShopPageClientProps) {
   const brands = useMemo(
     () => [...new Set(products.map((p) => p.brand).filter(Boolean))].sort(),
     [products],
@@ -225,7 +219,7 @@ export function ShopPageClient({
                 Бүх бараа
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                {loading ? "…" : `${filtered.length} бүтээгдэхүүн`}
+                {`${filtered.length} бүтээгдэхүүн`}
               </p>
             </div>
 
@@ -295,21 +289,17 @@ export function ShopPageClient({
             </div>
           </div>
 
-          {loading && children ? (
-            children
-          ) : (
-            <ProductGrid
-              products={filtered}
-              className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
-            />
-          )}
+          <ProductGrid
+            products={filtered}
+            className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+          />
 
-          {!loading && products.length === 0 ? (
+          {products.length === 0 ? (
             <p className="py-12 text-center text-sm text-muted-foreground">
               Бараа олдсонгүй. Сервер асаасан эсэхээ шалгана уу (
               <code className="text-xs">server → npm run dev</code>).
             </p>
-          ) : !loading && filtered.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <p className="py-12 text-center text-sm text-muted-foreground">
               Шүүлтүүрт тохирох бараа олдсонгүй. Шүүлтүүрийг өөрчилж үзнэ үү.
             </p>

@@ -1,34 +1,9 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 import { ProductGrid } from "@/components/products/ProductGrid";
-import { ProductGridSkeleton } from "@/components/ui/page-skeletons";
-import { useCatalogCache } from "@/hooks/use-catalog-cache";
-import { fetchCatalogCached } from "@/lib/catalog-client";
 import type { ShopProduct } from "@/lib/shop-products";
 
-export function FlashSaleSection() {
-  const cached = useCatalogCache({ limit: 8 });
-  const [products, setProducts] = useState<ShopProduct[] | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchCatalogCached({ limit: 8 })
-      .then((data) => {
-        if (!cancelled) setProducts(data);
-      })
-      .catch(() => {
-        if (!cancelled) setProducts([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const display = products ?? cached;
-
+export function FlashSaleSection({ products }: { products: ShopProduct[] }) {
   return (
     <section aria-labelledby="flash-sale-heading">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
@@ -41,20 +16,18 @@ export function FlashSaleSection() {
         <p className="text-sm text-foreground/50">Онцлох бүтээгдэхүүн</p>
       </div>
 
-      {display === null ? (
-        <ProductGridSkeleton count={8} />
-      ) : display.length === 0 ? (
+      {products.length === 0 ? (
         <div className="rounded-2xl bg-muted/30 px-6 py-12 text-center text-sm text-muted-foreground">
           <p>Одоогоор бараа байхгүй байна.</p>
         </div>
       ) : (
         <ProductGrid
-          products={display}
+          products={products}
           className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4"
         />
       )}
 
-      {display && display.length > 0 ? (
+      {products.length > 0 ? (
         <div className="mt-6 text-center">
           <Link
             href="/shop"

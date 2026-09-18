@@ -1,10 +1,14 @@
 import { cache } from "react";
 
-import type { AnimalKind, ShopCategory, ShopProduct } from "@/lib/shop-products";
-import { SHOP_CATEGORIES, formatMnt } from "@/lib/shop-products";
+import {
+  mapApiProduct,
+  mapApiProductList,
+  type ApiProduct,
+} from "@/lib/data/product-mapper";
+import type { ShopProduct } from "@/lib/shop-products";
+import { UPSTREAM_REVALIDATE_SEC } from "@/lib/upstream-api";
 
 const DEFAULT_API_URL = "http://localhost:8787";
-const CATALOG_REVALIDATE_SEC = 60;
 
 export type StoreConfig = {
   name: string;
@@ -56,6 +60,13 @@ export type CreateOrderResult = {
   status: string;
 };
 
+export type CatalogFilters = {
+  q?: string;
+  cat?: string;
+  limit?: number;
+  ids?: string[];
+};
+
 export function getApiBaseUrl(): string {
   const raw = process.env.NEXT_PUBLIC_API_URL?.trim();
   if (!raw) {
@@ -69,101 +80,18 @@ export function getApiBaseUrl(): string {
   return raw.endsWith("/") ? raw.slice(0, -1) : raw;
 }
 
-type ApiVariant = {
-  id: string;
-  label: string;
-  priceMnt: number;
-  stock?: number;
-  stockQty?: number;
-  isDefault?: boolean;
-};
-
-type ApiProduct = {
-  id: string;
-  slug: string;
-  name: string;
-  brand?: string | null;
-  priceMnt: number;
-  priceLabel?: string;
-  rating?: number;
-  badge?: string | null;
-  animals?: string[];
-  categorySlug?: string | null;
-  imageSrc?: string;
-  imageAlt?: string;
-  images?: string[];
-  variants?: ApiVariant[];
-  sizeOptions?: {
-    label: string;
-    priceLabel: string;
-    priceMnt?: number;
-    stock?: number;
-  }[];
-  ingredients?: string | null;
-  usage?: string | null;
-  shipping?: string | null;
-  description?: string | null;
-};
-
-function isShopCategory(v: string | null | undefined): v is ShopCategory {
-  return !!v && (SHOP_CATEGORIES as readonly string[]).includes(v);
+function catalogQuery(filters?: CatalogFilters): string {
+  const params = new URLSearchParams();
+  if (filters?.q) params.set("q", filters.q);
+  if (filters?.cat) params.set("cat", filters.cat);
+  if (filters?.limit) params.set("limit", String(filters.limit));
+  if (filters?.ids?.length) params.set("ids", filters.ids.join(","));
+  const qs = params.toString();
+  return qs ? `/api/products?${qs}` : "/api/products";
 }
 
-function isAnimalKind(v: string): v is AnimalKind {
-  return ["dog", "cat", "fish", "bird", "small"].includes(v);
-}
-
-function mapApiProduct(raw: ApiProduct): ShopProduct {
-  const priceMnt = Number(raw.priceMnt ?? 0);
-  const priceLabel = raw.priceLabel ?? formatMnt(priceMnt);
-  const images =
-    Array.isArray(raw.images) && raw.images.length
-      ? raw.images
-      : raw.imageSrc
-        ? [raw.imageSrc]
-        : [];
-
-  const sizeOptions =
-    raw.variants?.map((v) => ({
-      variantId: v.id,
-      label: v.label,
-      priceLabel: formatMnt(v.priceMnt),
-      priceMnt: v.priceMnt,
-      stock: v.stock ?? v.stockQty,
-    })) ??
-    raw.sizeOptions?.map((s) => ({
-      label: s.label,
-      priceLabel: s.priceLabel ?? formatMnt(s.priceMnt ?? priceMnt),
-      priceMnt: s.priceMnt ?? priceMnt,
-      stock: s.stock,
-    })) ??
-    [{ label: "Стандарт", priceLabel, priceMnt }];
-
-  const categorySlug = raw.categorySlug ?? null;
-
-  return {
-    id: raw.id,
-    slug: raw.slug ?? raw.id,
-    name: raw.name,
-    priceMnt,
-    priceLabel,
-    rating: Number(raw.rating ?? 4.5),
-    imageSrc: images[0] ?? "",
-    imageAlt: raw.imageAlt ?? raw.name,
-    images,
-    brand: raw.brand ?? "",
-    animals: (raw.animals ?? []).filter(isAnimalKind),
-    shopCategory: isShopCategory(categorySlug) ? categorySlug : "food",
-    badge:
-      raw.badge === "best" || raw.badge === "new" ? raw.badge : undefined,
-    sizeOptions,
-    ingredients: raw.ingredients ?? raw.description ?? "",
-    usage: raw.usage ?? "",
-    shipping: raw.shipping ?? "",
-  };
-}
-
-async function fetchJson<T>(
+/** Server / RSC — Workers API шууд */
+async function fetchUpstreamJson<T>(
   path: string,
   init?: RequestInit & { revalidate?: number | false },
 ): Promise<T | null> {
@@ -172,7 +100,7 @@ async function fetchJson<T>(
   const cacheMode =
     revalidate === false
       ? { cache: "no-store" as const }
-      : { next: { revalidate: revalidate ?? CATALOG_REVALIDATE_SEC } };
+      : { next: { revalidate: revalidate ?? UPSTREAM_REVALIDATE_SEC } };
 
   try {
     const res = await fetch(url, {
@@ -191,49 +119,89 @@ async function fetchJson<T>(
   }
 }
 
+/** Browser — same-origin BFF */
+async function fetchBffJson<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T | null> {
+  try {
+    const res = await fetch(path, {
+      cache: "default",
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        ...init?.headers,
+      },
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+function bffCatalogPath(filters?: CatalogFilters): string {
+  const params = new URLSearchParams();
+  if (filters?.q) params.set("q", filters.q);
+  if (filters?.cat) params.set("cat", filters.cat);
+  if (filters?.limit) params.set("limit", String(filters.limit));
+  if (filters?.ids?.length) params.set("ids", filters.ids.join(","));
+  const qs = params.toString();
+  return qs ? `/api/catalog?${qs}` : "/api/catalog";
+}
+
 export const fetchShopConfig = cache(async (): Promise<StoreConfig | null> => {
-  return fetchJson<StoreConfig>("/api/shop");
+  return fetchUpstreamJson<StoreConfig>("/api/shop");
 });
 
-export async function lookupOrder(
-  orderNumber: string,
-  email: string,
-): Promise<LookedUpOrder | null> {
-  const params = new URLSearchParams({ orderNumber, email });
-  return fetchJson<LookedUpOrder>(`/api/orders/lookup?${params.toString()}`, {
-    revalidate: false,
-  });
+/** Browser checkout — same-origin BFF */
+export async function fetchShopConfigClient(): Promise<StoreConfig | null> {
+  return fetchBffJson<StoreConfig>("/api/shop");
 }
 
 export const fetchCatalogProducts = cache(
-  async (filters?: {
-    q?: string;
-    cat?: string;
-    limit?: number;
-  }): Promise<ShopProduct[]> => {
-    const params = new URLSearchParams();
-    if (filters?.q) params.set("q", filters.q);
-    if (filters?.cat) params.set("cat", filters.cat);
-    if (filters?.limit) params.set("limit", String(filters.limit));
-    const qs = params.toString();
-    const data = await fetchJson<{ items?: ApiProduct[] } | ApiProduct[]>(
-      qs ? `/api/products?${qs}` : "/api/products",
+  async (filters?: CatalogFilters): Promise<ShopProduct[]> => {
+    const data = await fetchUpstreamJson<{ items?: ApiProduct[] } | ApiProduct[]>(
+      catalogQuery(filters),
     );
-    if (!data) return [];
-    const list = Array.isArray(data) ? data : (data.items ?? []);
-    return list.map(mapApiProduct);
+    return mapApiProductList(data);
   },
 );
 
 export const fetchProductBySlug = cache(
   async (slug: string): Promise<ShopProduct | null> => {
-    const data = await fetchJson<ApiProduct>(
+    const data = await fetchUpstreamJson<ApiProduct>(
       `/api/products/${encodeURIComponent(slug)}`,
     );
     if (!data) return null;
     return mapApiProduct(data);
   },
 );
+
+/** Client-only — wishlist зэрэг ID-аар татах */
+export async function fetchProductsByIds(
+  ids: string[],
+): Promise<ShopProduct[]> {
+  if (!ids.length) return [];
+  const data = await fetchBffJson<{ items?: ApiProduct[] }>(
+    bffCatalogPath({ ids }),
+  );
+  return mapApiProductList(data);
+}
+
+export async function lookupOrder(
+  orderNumber: string,
+  email: string,
+): Promise<LookedUpOrder | null> {
+  const params = new URLSearchParams({ orderNumber, email });
+  const path = `/api/orders/lookup?${params.toString()}`;
+
+  if (typeof window !== "undefined") {
+    return fetchBffJson<LookedUpOrder>(path);
+  }
+
+  return fetchUpstreamJson<LookedUpOrder>(path, { revalidate: false });
+}
 
 export async function createOrder(
   input: CreateOrderInput,

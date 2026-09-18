@@ -1,6 +1,9 @@
-import { ShopPageView } from "@/components/shop/ShopPageView";
+import { ShopPageClient } from "@/components/shop/ShopPageClient";
+import { fetchCatalogProducts } from "@/lib/api";
 
-/** Client-side catalog — navigation шууд, өгөгдөл дараа нь */
-export default function ShopPage() {
-  return <ShopPageView />;
+export const revalidate = 60;
+
+export default async function ShopPage() {
+  const products = await fetchCatalogProducts();
+  return <ShopPageClient products={products} />;
 }
